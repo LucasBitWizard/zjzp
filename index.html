@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>招聘信息平台</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #222;
+  --text2: #666;
+  --text3: #999;
+  --boss-red: #fe5745;
+  --boss-blue: #4a90e2;
+  --primary: #4f6ef7;
+  --border: #f0f0f0;
+  --shadow: 0 1px 6px rgba(0,0,0,0.04);
+  --radius: 12px;
+  --transition: 0.2s ease;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ========== 单位信息横幅 ========== */
+.org-banner {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+  color: #fff;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.org-info { flex: 1; min-width: 200px; }
+.org-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.org-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-top: 2px;
+}
+.org-contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.1);
+  padding: 8px 16px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.contact-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+}
+.contact-phone {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #5ef884;
+  text-decoration: none;
+  letter-spacing: 1px;
+  transition: 0.2s;
+}
+.contact-phone:hover { color: #8fffb0; }
+.contact-person {
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+}
+
+/* ========== 顶部导航 ========== */
+.nav {
+  background: var(--card);
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.nav .logo {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.nav .logo .dot {
+  width: 8px; height: 8px;
+  background: var(--boss-red);
+  border-radius: 50%;
+}
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-right button {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text2);
+  font-weight: 500;
+  transition: var(--transition);
+}
+.nav-right button:hover { background: #f5f5f5; color: var(--text); }
+.nav-right button.active { background: var(--primary); color: #fff; }
+
+/* ========== 主容器 ========== */
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px;
+}
+.page { display: none; }
+.page.active { display: block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== 筛选标签组 ========== */
+.filter-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.filter-tab {
+  flex: 1;
+  padding: 11px 0;
+  border: none;
+  border-radius: 22px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  background: #fff;
+  color: var(--text2);
+  transition: var(--transition);
+  box-shadow: var(--shadow);
+}
+.filter-tab:hover { color: var(--text); }
+.filter-tab.active {
+  background: var(--boss-red);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(254,87,69,0.3);
+}
+
+/* ========== 搜索栏 ========== */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.search-bar input {
+  flex: 1;
+  border: none;
+  border-radius: 22px;
+  padding: 11px 18px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+.search-bar input:focus { box-shadow: 0 0 0 2px rgba(79,110,247,0.15); }
+
+/* ========== 职位卡片（BOSS风格） ========== */
+.job-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.job-card:active { transform: scale(0.985); }
+
+/* 公司头像 */
+.company-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* 卡片内容 */
+.card-body { flex: 1; min-width: 0; }
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+.job-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  word-break: break-all;
+}
+.job-salary {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--boss-red);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+.card-meta .dot-sep {
+  width: 3px; height: 3px;
+  background: #ddd;
+  border-radius: 50%;
+}
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.tag-blue  { background: #ecf5fd; color: #4a90e2; }
+.tag-green { background: #eaf7ee; color: #2eaa5a; }
+.tag-orange{ background: #fef3e8; color: #e8882e; }
+.tag-gray  { background: #f3f4f6; color: #888; }
+
+/* 展开详情 */
+.card-detail { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.job-card.expanded .card-detail { display: block; }
+.card-detail .detail-row { font-size: 13px; color: var(--text2); line-height: 1.8; }
+.card-detail .detail-label { font-weight: 600; color: var(--text); }
+
+/* 空状态 */
+/* 没有适合的职位 */
+.no-match-box {
+  text-align: center;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, #fff8f6 0%, #fff 100%);
+  border: 1.5px dashed #fecaca;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.no-match-box p {
+  font-size: 14px;
+  color: var(--boss-red);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* 求职报名列表 */
+.apply-list .apply-item {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.apply-item .apply-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.apply-item .apply-name { font-weight: 700; font-size: 15px; color: var(--text); }
+.apply-item .apply-phone { color: var(--primary); font-weight: 600; }
+.apply-item .apply-pos { color: var(--boss-red); }
+.apply-item .apply-detail { color: var(--text2); margin-top: 4px; }
+.apply-item .apply-time { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+.admin-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 24px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  background: var(--boss-red);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.no-jobs {
+  text-align: center;
+  padding: 80px 20px;
+  color: #ccc;
+}
+.no-jobs .icon { font-size: 56px; margin-bottom: 12px; }
+.no-jobs p { font-size: 15px; }
+
+/* 更新时间 */
+.update-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.update-time { font-size: 12px; color: var(--text3); }
+.job-count { font-size: 12px; color: var(--text3); }
+
+/* ========== 管理页 ========== */
+.login-box {
+  max-width: 340px;
+  margin: 60px auto;
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 36px 28px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.login-box h3 { margin-bottom: 6px; font-size: 1.1rem; }
+.login-box .hint { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+.login-box input {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 15px;
+  outline: none;
+  text-align: center;
+  letter-spacing: 2px;
+  transition: var(--transition);
+}
+.login-box input:focus { border-color: var(--primary); }
+.login-box .error { color: var(--boss-red); font-size: 13px; margin-top: 8px; display: none; }
+
+.btn {
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: #3b54db; }
+.btn-outline { background: #fff; color: var(--primary); border: 2px solid var(--primary); }
+.btn-outline:hover { background: #f0f4ff; }
+.btn-sm { padding: 6px 14px; font-size: 13px; }
+.btn-danger { background: #fff; color: var(--boss-red); border: 1px solid #fecaca; }
+.btn-danger:hover { background: #fef2f2; }
+.btn-ghost { background: transparent; color: var(--text2); }
+.btn-ghost:hover { background: #f3f4f6; }
+
+.admin-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-toolbar h3 { font-size: 1.05rem; }
+
+.admin-list .job-item {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+}
+.job-item .info { flex: 1; min-width: 180px; }
+.job-item .info .pos { font-weight: 600; font-size: 14px; }
+.job-item .info .comp { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.job-item .status { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 500; }
+.status-active  { background: #eaf7ee; color: #2eaa5a; }
+.status-inactive{ background: #fef2f2; color: #c0392b; }
+.job-item .item-actions { display: flex; gap: 4px; }
+
+/* ========== 弹窗 ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.12);
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal h3 { margin-bottom: 18px; font-size: 1.1rem; }
+.form-group { margin-bottom: 14px; }
+.form-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 5px;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: var(--transition);
+  font-family: inherit;
+  resize: vertical;
+  background: #fafbfc;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--primary);
+  background: #fff;
+}
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* ========== Toast ========== */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.toast.show { opacity: 1; }
+
+/* ========== 响应式 ========== */
+@media (max-width: 480px) {
+  .org-banner { flex-direction: column; text-align: center; padding: 14px 16px; }
+  .org-name { font-size: 0.85rem; }
+  .contact-phone { font-size: 1rem; }
+  .container { padding: 12px 10px; }
+  .job-card { padding: 14px; gap: 10px; }
+  .company-avatar { width: 40px; height: 40px; font-size: 17px; border-radius: 8px; }
+  .job-title { font-size: 15px; }
+  .job-salary { font-size: 15px; }
+  .filter-tab { font-size: 14px; padding: 10px 0; }
+  .card-meta { font-size: 12px; }
+  .nav .logo { font-size: 0.95rem; }
+  .modal { padding: 20px 16px; }
+  .form-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<!-- 顶部单位信息条 -->
+<div class="org-banner">
+  <div class="org-info">
+    <div class="org-name">甘肃省人社厅劳务办驻浙江劳动管理处</div>
+  </div>
+  <div class="org-contact">
+    <span class="contact-label">联系电话</span>
+    <a href="tel:16657112288" class="contact-phone">16657112288</a>
+    <span class="contact-person">郭主任</span>
+  </div>
+</div>
+
+<nav class="nav">
+  <div class="logo"><span class="dot"></span>招聘信息平台</div>
+  <div class="nav-right">
+    <button data-page="public" class="active">📋 职位</button>
+    <button data-page="admin" id="tabAdmin">⚙️ 管理</button>
+  </div>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ==================== 招聘信息页 ==================== -->
+<div class="page active" id="page-public">
+  <div class="container">
+    <!-- BOSS风格：三个类型标签 -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" data-type="all">全部</button>
+      <button class="filter-tab" data-type="实习">🎓 实习</button>
+      <button class="filter-tab" data-type="兼职">💼 兼职</button>
+      <button class="filter-tab" data-type="全职">🏢 全职</button>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 搜索职位、公司、地点…" />
+    </div>
+
+    <!-- 状态栏 -->
+    <div class="update-bar">
+      <span class="job-count" id="jobCount">共 0 个职位</span>
+      <span class="update-time" id="updateTime">最后更新：--</span>
+    </div>
+
+    <!-- 没有适合的职位？ -->
+    <div class="no-match-box" id="noMatchBox">
+      <p>没有适合你的职位？</p>
+      <button class="btn btn-outline" id="btnApply">📝 点击提交简历信息</button>
+    </div>
+
+    <!-- 职位列表 -->
+    <div id="jobList"></div>
+
+    <div class="no-jobs" id="noJobs" style="display:none">
+      <div class="icon">📭</div>
+      <p>暂无相关职位</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 管理页 ==================== -->
+<div class="page" id="page-admin">
+  <div class="container">
+    <!-- 登录 -->
+    <div id="loginBox" class="login-box">
+      <h3>🔐 管理员登录</h3>
+      <p class="hint">请输入管理密码</p>
+      <input type="password" id="loginPwd" placeholder="输入密码" maxlength="20" />
+      <p class="error" id="loginError">密码错误，请重试</p>
+      <button class="btn btn-primary" style="margin-top:16px;width:100%" id="btnLogin">登 录</button>
+    </div>
+
+    <!-- 管理面板 -->
+    <div id="adminPanel" style="display:none">
+      <div class="admin-toolbar">
+        <h3>📋 管理招聘信息（<span id="adminJobCount">0</span> 条）</h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn btn-outline btn-sm" id="btnExport">📤 导出</button>
+          <button class="btn btn-outline btn-sm" id="btnImport">📥 导入</button>
+          <input type="file" id="importFile" accept=".json" style="display:none" />
+          <button class="btn btn-outline btn-sm" id="btnChangePwd">🔑 改密码</button>
+          <button class="btn btn-primary btn-sm" id="btnAdd">＋ 添加</button>
+        </div>
+      </div>
+      <div id="adminJobList" class="admin-list"></div>
+
+      <!-- 求职报名列表 -->
+      <div id="applySection" class="apply-section" style="display:none">
+        <div class="admin-section-title">📨 求职报名信息（<span id="applyCount">0</span> 条）</div>
+        <div id="applyList" class="apply-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 岗位编辑弹窗 ==================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <h3 id="modalTitle">添加岗位</h3>
+    <input type="hidden" id="editId" />
+
+    <div class="form-group">
+      <label>职位名称 *</label>
+      <input type="text" id="fTitle" placeholder="如：前端开发工程师" maxlength="50" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>公司名称 *</label>
+        <input type="text" id="fCompany" placeholder="如：XX科技有限公司" maxlength="50" />
+      </div>
+      <div class="form-group">
+        <label>工作地点</label>
+        <input type="text" id="fLocation" placeholder="如：北京·朝阳区" maxlength="30" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>薪资范围</label>
+        <input type="text" id="fSalary" placeholder="如：15K-25K" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>工作类型</label>
+        <select id="fType">
+          <option value="全职">全职</option>
+          <option value="兼职">兼职</option>
+          <option value="实习">实习</option>
+          <option value="远程">远程</option>
+          <option value="外包">外包</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>职位描述</label>
+      <textarea id="fDesc" rows="3" placeholder="描述岗位职责和工作内容…" maxlength="500"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>任职要求</label>
+      <textarea id="fReq" rows="3" placeholder="学历、技能、经验等要求…" maxlength="500"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>福利标签（用逗号分隔）</label>
+      <input type="text" id="fTags" placeholder="如：五险一金,双休,年终奖" maxlength="200" />
+    </div>
+
+    <div class="form-group">
+      <label>联系方式</label>
+      <input type="text" id="fContact" placeholder="如：邮箱 hr@example.com / 微信 xxxxx" maxlength="100" />
+    </div>
+
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="fActive" checked style="width:auto" />
+        <span style="font-weight:400">立即上架（取消勾选则暂不对外展示）</span>
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnCancel">取消</button>
+      <button class="btn btn-primary" id="btnSave">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 求职报名弹窗 ==================== -->
+<div class="modal-overlay" id="applyModalOverlay">
+  <div class="modal" id="applyModal">
+    <h3>📝 提交求职信息</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:18px">留下信息，如有合适岗位我们将主动联系您</p>
+
+    <div class="form-group">
+      <label>姓名 *</label>
+      <input type="text" id="aName" placeholder="请输入您的姓名" maxlength="20" />
+    </div>
+
+    <div class="form-group">
+      <label>手机号 *</label>
+      <input type="tel" id="aPhone" placeholder="请输入您的手机号码" maxlength="11" />
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>意向岗位</label>
+        <input type="text" id="aPosition" placeholder="如：普工、质检员" maxlength="50" />
+      </div>
+      <div class="form-group">
+        <label>期望薪资</label>
+        <input type="text" id="aSalary" placeholder="如：6000-8000元" maxlength="30" />
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>期望地点</label>
+        <input type="text" id="aLocation" placeholder="如：浙江杭州" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>学历</label>
+        <select id="aEdu">
+          <option value="">请选择</option>
+          <option value="小学">小学</option>
+          <option value="初中">初中</option>
+          <option value="高中">高中</option>
+          <option value="中专">中专</option>
+          <option value="大专">大专</option>
+          <option value="本科">本科</option>
+          <option value="硕士及以上">硕士及以上</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>技能/经验</label>
+      <textarea id="aSkills" rows="2" placeholder="简单描述您的技能或工作经验…" maxlength="300"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>其他备注</label>
+      <textarea id="aNote" rows="2" placeholder="如有其他想说的可以写在这里…" maxlength="200"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnApplyCancel">取消</button>
+      <button class="btn btn-primary" id="btnApplySubmit">✅ 提交</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===================== 常量 =====================
+  const STORAGE_KEY = 'job_board_data';
+  const PWD_KEY     = 'job_board_admin_pwd';
+  const DEFAULT_PWD = 'admin123';
+  const UPDATE_KEY  = 'job_board_last_update';
+  const DATA_VERSION = 4; // 递增此版本号可强制刷新默认数据
+
+  // 公司头像颜色池（BOSS风格彩色方块）
+  const AVATAR_COLORS = [
+    '#4a90e2', '#e8882e', '#2eaa5a', '#8b5cf6', '#e8456b',
+    '#06b6d4', '#f59e0b', '#10b981', '#6366f1', '#ec4899',
+  ];
+
+  // ===================== DOM 引用 =====================
+  const $ = (s) => document.querySelector(s);
+
+  const $navBtns     = document.querySelectorAll('.nav-right button');
+  const $pages       = document.querySelectorAll('.page');
+  const $jobList     = $('#jobList');
+  const $noJobs      = $('#noJobs');
+  const $updateTime  = $('#updateTime');
+  const $jobCount    = $('#jobCount');
+  const $searchInput = $('#searchInput');
+  const $filterTabs  = document.querySelectorAll('.filter-tab');
+  const $loginBox    = $('#loginBox');
+  const $adminPanel  = $('#adminPanel');
+  const $loginPwd    = $('#loginPwd');
+  const $loginError  = $('#loginError');
+  const $adminList   = $('#adminJobList');
+  const $adminJobCount = $('#adminJobCount');
+  const $modalOverlay = $('#modalOverlay');
+  const $modalTitle  = $('#modalTitle');
+  const $editId      = $('#editId');
+  const $fTitle      = $('#fTitle');
+  const $fCompany    = $('#fCompany');
+  const $fLocation   = $('#fLocation');
+  const $fSalary     = $('#fSalary');
+  const $fType       = $('#fType');
+  const $fDesc       = $('#fDesc');
+  const $fReq        = $('#fReq');
+  const $fTags       = $('#fTags');
+  const $fContact    = $('#fContact');
+  const $fActive     = $('#fActive');
+  const $toast       = $('#toast');
+
+  // 求职报名表单
+  const $applyModalOverlay = $('#applyModalOverlay');
+  const $aName      = $('#aName');
+  const $aPhone     = $('#aPhone');
+  const $aPosition  = $('#aPosition');
+  const $aSalary    = $('#aSalary');
+  const $aLocation  = $('#aLocation');
+  const $aEdu       = $('#aEdu');
+  const $aSkills    = $('#aSkills');
+  const $aNote      = $('#aNote');
+
+  // ===================== 数据 =====================
+  const APPLY_KEY  = 'job_board_applications';
+  let jobs = [];
+  let applications = [];
+  let isLoggedIn = false;
+  let toastTimer = null;
+  let currentType = 'all';
+
+  function loadJobs() {
+    var savedVersion = parseInt(localStorage.getItem('job_board_data_version')) || 0;
+    if (savedVersion < DATA_VERSION) {
+      // 数据版本更新，自动载入最新招聘信息
+      jobs = getDefaultJobs();
+      localStorage.setItem('job_board_data_version', DATA_VERSION);
+      saveJobs();
+      return;
+    }
+    try { jobs = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch (_) { jobs = []; }
+    if (jobs.length === 0) {
+      jobs = getDefaultJobs();
+      saveJobs();
+    }
+  }
+
+  function getDefaultJobs() {
+    return [
+      {"id":"j12","title":"流水线操作工","company":"三花控股集团","location":"浙江绍兴-新昌","salary":"5500-7500元/月","type":"全职","desc":"三花控股集团是全球制冷空调控制元器件领军企业，A股上市公司。新昌基地流水线作业，工作环境好，管理规范。招聘人数：50人。","req":"年龄18-45周岁，身体健康，男女不限，学历不限。","tags":"五险一金,包吃住,节日福利,上市公司","contact":"郭主任 16657112288","active":true,"createdAt":1749720000000},
+      {"id":"j13","title":"普工/操作员","company":"海康威视","location":"浙江杭州-桐庐","salary":"6000-8000元/月","type":"全职","desc":"海康威视是全球领先的智能安防解决方案提供商，A股上市公司，国企背景。桐庐基地生产线作业，恒温车间，环境优良。招聘人数：50人。","req":"年龄18-40周岁，初中以上学历，身体健康，男女不限。","tags":"五险一金,恒温车间,包吃住,国企背景,上市公司","contact":"郭主任 16657112288","active":true,"createdAt":1749710000000},
+      {"id":"j11","title":"业务员","company":"科技公司","location":"浙江","salary":"底薪3000+提成3000-5000元","type":"实习","desc":"维护开发新老客户，拓展业务渠道，跟进客户需求，完成销售目标。实习期间三个月以上缴纳五险一金。","req":"大专学历，专业不限，沟通能力强，有责任心。","tags":"五险一金,底薪+提成,实习转正","contact":"郭主任 16657112288","active":true,"createdAt":1749700000000},
+      {"id":"j1","title":"储干","company":"盐城立讯智能工业园立铠精密K区","location":"江苏盐城","salary":"6000-8000元/月","type":"全职","desc":"园区主打3C产品精密结构件、智能终端散热模组及配套模具的研发与生产，配备全套智能化生产、检测及环保设备，生产全程数控智能化。产品供货全球主流消费电子品牌。","req":"高中以上学历，年龄18-45周岁，不限性别。","tags":"五险,免费吃住,不体检,社保当月交","contact":"朱总 18912582200 / 郭主任 16657112288","active":true,"createdAt":1749686400000},
+      {"id":"j2","title":"流水线装配岗","company":"浙江零跑科技股份有限公司","location":"浙江金华","salary":"6000-7000元/月","type":"全职","desc":"零跑汽车诞生于2015年，总部位于杭州，业务涵盖智能电动汽车整车设计、研发制造、智能驾驶、电机电控、电池系统开发。整车制造车间一线流水线装配岗，9点半对9点半，12小时两班倒，包两餐，包住水电自付，工时稳定。","req":"18-40岁，不限性别。","tags":"五险,包吃住,工时稳定","contact":"郭主任 16657112288","active":true,"createdAt":1749686300000},
+      {"id":"j3","title":"塑胶模具钳工","company":"浙江双环传动机械股份有限公司","location":"浙江杭州","salary":"6000-9000元/月","type":"全职","desc":"双环传动创建于1980年，2010年深交所上市，全球规模齿轮散件制造企业，新能源齿轮国内市场占有率遥遥领先。负责模具图纸评审、零部件装配、模具制作推进及现场5S管理。","req":"具有机械图纸识读能力，熟练掌握钳工基本技能（划线、锉削、攻螺纹、刮削、研磨），掌握车铣磨床、火花机等操作，有齿轮模具制作经验者优先。","tags":"五险一金,员工体检,节日福利,免费培训","contact":"陈女士 15669918920 / 郭主任 16657112288","active":true,"createdAt":1749686200000},
+      {"id":"j4","title":"生产制造线班组长","company":"利欧集团股份有限公司","location":"浙江台州-温岭","salary":"6000-9000元/月","type":"全职","desc":"利欧集团是中国泵行业上市公司，员工约6000人，2023年营收205亿元。负责落实生产计划、现场巡视监督、品质管控、物料管理、6S管理、员工纪律管理等。","req":"专科及以上，机电一体化、数控技术、机械设计制造及其自动化等相关专业；具有较强的沟通和组织协调能力，积极乐观、吃苦耐劳。","tags":"五险,13薪,全勤奖,节日福利","contact":"陈女士 15669918920 / 郭主任 16657112288","active":true,"createdAt":1749686100000},
+      {"id":"j5","title":"普工（组装/包装/插件/焊锡/SMT）","company":"杭州海兴电力科技股份有限公司","location":"浙江杭州拱墅区","salary":"6200元+/月","type":"全职","desc":"海兴电力是国家级高新技术企业、制造业单项冠军，业务覆盖全球110多个国家和地区。18元/小时+夜班补贴40元，包吃住，坐班，管理人性化，可带手机，上班时间8:00-20:00。","req":"男女不限，年龄18-40岁，初中学历，能接受夜班。","tags":"五险,包吃住,夜班补贴,坐班,可带手机","contact":"柏女士 18393517517 / 郭主任 16657112288","active":true,"createdAt":1749686000000},
+      {"id":"j6","title":"普工","company":"杭州临安市照明灯具厂","location":"浙江杭州临安区","salary":"6500元左右/月","type":"全职","desc":"临安市照明灯具厂从事各类灯具、节能灯管、照明电器的加工、组装与销售。19元/小时＋夜班津贴20元，月休2-3天，每月20日发工资。免费工作餐，宿舍4-6人间，独立卫生间空调热水器。","req":"年龄18-40岁，以女工为主。","tags":"五险,免费工作餐,独立卫生间,空调热水器","contact":"柏女士 18393517517 / 郭主任 16657112288","active":true,"createdAt":1749685900000},
+      {"id":"j7","title":"普工","company":"宁波家联科技股份有限公司","location":"浙江宁波镇海区","salary":"7000元+/月","type":"全职","desc":"家联科技是国内环保餐饮具行业首家上市公司。两班倒，高工时月出勤28天，新员工前7天按180元/天，7天后按计件，综合240-280元/天，多劳多得上不封顶。","req":"年龄18-48岁，女工48岁以内，男工45岁以内，民族不限，小学毕业，身体健康即可。","tags":"五险,多劳多得,计件工资","contact":"陈女士 15669918920 / 郭主任 16657112288","active":true,"createdAt":1749685800000},
+      {"id":"j8","title":"普工","company":"立铠精密科技(盐城)有限公司","location":"江苏盐城","salary":"6000-8000元/月","type":"全职","desc":"立铠精密系立讯精密控股企业，总投资180亿元，员工超1.6万人，长三角领先的3C精密结构件智能制造基地。底薪2430/月，夜班津贴9元/天，全勤奖100元，餐补350元，年资奖300元，岗位津贴440-1750元/月。新人年补贴9400元分期月付。","req":"男18-45周岁，女18-43周岁；初中及以上学历；识别26个英文字母；身体健康，无传染性疾病。","tags":"五险一金,全勤奖,餐补,年资奖,岗位津贴,新人补贴9400","contact":"朱总 19952882811 / 郭主任 16657112288","active":true,"createdAt":1749685700000},
+      {"id":"j9","title":"一线客服","company":"杭州遥望网络科技有限公司","location":"浙江杭州余杭","salary":"6000-8000元/月","type":"全职","desc":"遥望网络是国内头部直播电商综合服务商，首家登陆A股的直播电商企业，业务覆盖抖音、快手、淘宝等主流平台。负责解决账号交易纠纷，处理交易流程中的取消交易、失联换绑、账号登录等问题。","req":"至少一年以上客服相关连续工作经验，沟通能力较强，有服务意识，电脑打字55字/分钟以上，大专以上学历。","tags":"五险,底薪+绩效,职级奖金","contact":"陈女士 15669918920 / 郭主任 16657112288","active":true,"createdAt":1749685600000},
+      {"id":"j10","title":"自行车维修工","company":"浙江新时代人才科技有限公司","location":"浙江杭州","salary":"4000-8000元/月","type":"全职","desc":"负责自行车日常维修、调试、保养、组装。工作稳定轻松，环境简单。工作地点含城东九和路、城南凤山门、城西三墩、城北等多个公交停保基地服务点。","req":"能独立完成基础维修，动手能力强；工作认真负责，有责任心；有无经验均可，有维修经验优先录用。","tags":"五险,全勤奖,节日福利,工作稳定","contact":"陈女士 15669918920 / 郭主任 16657112288","active":true,"createdAt":1749685500000}
+    ];
+  }
+
+  function saveJobs() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+    localStorage.setItem(UPDATE_KEY, new Date().toISOString());
+  }
+
+  function getUpdateTime() {
+    const ts = localStorage.getItem(UPDATE_KEY);
+    return ts ? new Date(ts).toLocaleString('zh-CN') : '--';
+  }
+
+  function genId() {
+    return 'j' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  // ===================== 求职报名 =====================
+  function loadApplications() {
+    try { applications = JSON.parse(localStorage.getItem(APPLY_KEY)) || []; }
+    catch (_) { applications = []; }
+  }
+
+  function saveApplications() {
+    localStorage.setItem(APPLY_KEY, JSON.stringify(applications));
+  }
+
+  function getApplyCount() {
+    return applications.filter(function(a) { return !a.read; }).length;
+  }
+
+  // 打开报名弹窗
+  $('#btnApply').addEventListener('click', function() {
+    $aName.value = '';
+    $aPhone.value = '';
+    $aPosition.value = '';
+    $aSalary.value = '';
+    $aLocation.value = '';
+    $aEdu.value = '';
+    $aSkills.value = '';
+    $aNote.value = '';
+    $applyModalOverlay.classList.add('show');
+    $aName.focus();
+  });
+
+  // 关闭报名弹窗
+  $('#btnApplyCancel').addEventListener('click', function() {
+    $applyModalOverlay.classList.remove('show');
+  });
+  $applyModalOverlay.addEventListener('click', function(e) {
+    if (e.target === $applyModalOverlay) $applyModalOverlay.classList.remove('show');
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && $applyModalOverlay.classList.contains('show')) {
+      $applyModalOverlay.classList.remove('show');
+    }
+  });
+
+  // 提交报名
+  $('#btnApplySubmit').addEventListener('click', function() {
+    var name = $aName.value.trim();
+    var phone = $aPhone.value.trim();
+    if (!name) { toast('⚠️ 请输入您的姓名'); $aName.focus(); return; }
+    if (!phone || !/^1\d{10}$/.test(phone)) { toast('⚠️ 请输入正确的11位手机号'); $aPhone.focus(); return; }
+
+    applications.push({
+      id: 'a' + Date.now().toString(36),
+      name: name,
+      phone: phone,
+      position: $aPosition.value.trim(),
+      salary: $aSalary.value.trim(),
+      location: $aLocation.value.trim(),
+      edu: $aEdu.value,
+      skills: $aSkills.value.trim(),
+      note: $aNote.value.trim(),
+      read: false,
+      createdAt: Date.now()
+    });
+
+    saveApplications();
+    $applyModalOverlay.classList.remove('show');
+    updateApplyBadge();
+    toast('✅ 信息已提交，如有合适岗位我们会联系您');
+  });
+
+  // 更新管理标签上的红点
+  function updateApplyBadge() {
+    var count = getApplyCount();
+    var tab = document.getElementById('tabAdmin');
+    var oldBadge = tab.querySelector('.badge');
+    if (oldBadge) oldBadge.remove();
+    if (count > 0) {
+      var badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = count;
+      tab.appendChild(badge);
+    }
+  }
+
+  // 渲染求职报名列表（管理页）
+  function renderApplications() {
+    var section = document.getElementById('applySection');
+    var list = document.getElementById('applyList');
+    if (!section || !list) return;
+
+    if (applications.length === 0) {
+      section.style.display = 'none';
+      return;
+    }
+    section.style.display = 'block';
+
+    var sorted = [].concat(applications).sort(function(a, b) { return b.createdAt - a.createdAt; });
+    list.innerHTML = sorted.map(function(a) {
+      return '<div class="apply-item' + (a.read ? '' : ' style="border-left:3px solid var(--boss-red)"') + '">'
+        + '<div class="apply-meta">'
+        +   '<span class="apply-name">' + escHtml(a.name) + '</span>'
+        +   '<span class="apply-phone">📞 ' + escHtml(a.phone) + '</span>'
+        +   (a.position ? '<span class="apply-pos">' + escHtml(a.position) + '</span>' : '')
+        +   (a.edu ? '<span style="color:var(--text3)">' + escHtml(a.edu) + '</span>' : '')
+        + '</div>'
+        + (a.salary || a.location ? '<div class="apply-meta" style="color:var(--text2)">'
+          + (a.salary ? '💰 ' + escHtml(a.salary) : '')
+          + (a.location ? ' 📍 ' + escHtml(a.location) : '')
+          + '</div>' : '')
+        + (a.skills ? '<div class="apply-detail">🔧 ' + escHtml(a.skills) + '</div>' : '')
+        + (a.note ? '<div class="apply-detail">📝 ' + escHtml(a.note) + '</div>' : '')
+        + '<div class="apply-time">' + new Date(a.createdAt).toLocaleString('zh-CN') + '</div>'
+        + '<div style="margin-top:8px">'
+        +   '<button class="btn btn-outline btn-sm" data-mark="' + a.id + '">' + (a.read ? '👁 标记未读' : '✔ 标为已读') + '</button>'
+        +   '<button class="btn btn-danger btn-sm" data-del="' + a.id + '">🗑 删除报名</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+
+    // 绑定按钮事件
+    list.querySelectorAll('button[data-mark]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var app = applications.find(function(a) { return a.id === btn.dataset.mark; });
+        if (app) { app.read = true; saveApplications(); renderApplications(); updateApplyBadge(); }
+      });
+    });
+    list.querySelectorAll('button[data-del]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        if (!confirm('确定删除这条报名信息吗？')) return;
+        applications = applications.filter(function(a) { return a.id !== btn.dataset.del; });
+        saveApplications();
+        renderApplications();
+        updateApplyBadge();
+        toast('🗑 已删除');
+      });
+    });
+  }
+
+  // ===================== Toast =====================
+  function toast(msg) {
+    if (toastTimer) clearTimeout(toastTimer);
+    $toast.textContent = msg;
+    $toast.classList.add('show');
+    toastTimer = setTimeout(() => $toast.classList.remove('show'), 2000);
+  }
+
+  // ===================== 页面切换 =====================
+  function switchPage(name) {
+    $navBtns.forEach(b => b.classList.toggle('active', b.dataset.page === name));
+    $pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + name));
+    if (name === 'public') {
+      renderPublic();
+    } else if (name === 'admin') {
+      if (isLoggedIn) {
+        $loginBox.style.display = 'none';
+        $adminPanel.style.display = 'block';
+        renderAdmin();
+      } else {
+        $loginBox.style.display = 'block';
+        $adminPanel.style.display = 'none';
+        $loginPwd.value = '';
+        $loginError.style.display = 'none';
+      }
+    }
+  }
+
+  $navBtns.forEach(b => b.addEventListener('click', () => switchPage(b.dataset.page)));
+
+  // ===================== 类型筛选标签 =====================
+  $filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      $filterTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentType = tab.dataset.type;
+      $searchInput.value = '';
+      renderPublic();
+    });
+  });
+
+  // ===================== 头像颜色 =====================
+  function getAvatarColor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  }
+
+  function getInitial(name) {
+    return (name || '?')[0];
+  }
+
+  // ===================== 公开页渲染 =====================
+  function renderPublic() {
+    const keyword = ($searchInput.value || '').toLowerCase().trim();
+    let filtered = jobs.filter(j => j.active !== false);
+    if (currentType !== 'all') {
+      filtered = filtered.filter(j => j.type === currentType);
+    }
+    if (keyword) {
+      filtered = filtered.filter(j =>
+        j.title.toLowerCase().includes(keyword) ||
+        j.company.toLowerCase().includes(keyword) ||
+        (j.location || '').toLowerCase().includes(keyword) ||
+        (j.desc || '').toLowerCase().includes(keyword) ||
+        (j.tags || '').toLowerCase().includes(keyword)
+      );
+    }
+    filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+    $jobCount.textContent = '共 ' + filtered.length + ' 个职位';
+    $updateTime.textContent = '最后更新：' + getUpdateTime();
+
+    if (filtered.length === 0) {
+      $jobList.innerHTML = '';
+      $noJobs.style.display = 'block';
+      return;
+    }
+    $noJobs.style.display = 'none';
+
+    $jobList.innerHTML = filtered.map(j => {
+      var bgColor = getAvatarColor(j.company);
+      var tags = (j.tags || '').split(/[,，]/).filter(Boolean);
+      var tagHtml = tags.map(function(t, i) {
+        var cls = ['tag-blue', 'tag-green', 'tag-orange', 'tag-gray'][i % 4];
+        return '<span class="tag ' + cls + '">' + escHtml(t.trim()) + '</span>';
+      }).join('');
+
+      return '<div class="job-card" data-id="' + j.id + '" onclick="this.classList.toggle(\'expanded\')">'
+        + '<div class="company-avatar" style="background:' + bgColor + '">' + getInitial(j.company) + '</div>'
+        + '<div class="card-body">'
+        +   '<div class="card-top">'
+        +     '<div class="job-title">' + escHtml(j.title) + '</div>'
+        +     (j.salary ? '<div class="job-salary">' + escHtml(j.salary) + '</div>' : '')
+        +   '</div>'
+        +   '<div class="card-meta">'
+        +     '<span>' + escHtml(j.company) + '</span>'
+        +     (j.location ? '<span class="dot-sep"></span><span>' + escHtml(j.location) + '</span>' : '')
+        +     (j.type ? '<span class="dot-sep"></span><span>' + escHtml(j.type) + '</span>' : '')
+        +   '</div>'
+        +   (tagHtml ? '<div class="card-tags">' + tagHtml + '</div>' : '')
+        +   '<div class="card-detail">'
+        +     (j.desc ? '<div class="detail-row"><span class="detail-label">📝 职位描述：</span>' + escHtml(j.desc) + '</div>' : '')
+        +     (j.req ? '<div class="detail-row"><span class="detail-label">📋 任职要求：</span>' + escHtml(j.req) + '</div>' : '')
+        +     (j.contact ? '<div class="detail-row"><span class="detail-label">📞 联系方式：</span>' + escHtml(j.contact) + '</div>' : '')
+        +   '</div>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  }
+
+  function escHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  $searchInput.addEventListener('input', renderPublic);
+
+  // ===================== 管理页 =====================
+  function getAdminPwd() {
+    return localStorage.getItem(PWD_KEY) || DEFAULT_PWD;
+  }
+
+  function setAdminPwd(pwd) {
+    localStorage.setItem(PWD_KEY, pwd);
+  }
+
+  $('#btnLogin').addEventListener('click', () => {
+    if ($loginPwd.value.trim() === getAdminPwd()) {
+      isLoggedIn = true;
+      $loginBox.style.display = 'none';
+      $adminPanel.style.display = 'block';
+      $loginError.style.display = 'none';
+      renderAdmin();
+      toast('✅ 登录成功');
+    } else {
+      $loginError.style.display = 'block';
+      $loginPwd.value = '';
+      $loginPwd.focus();
+    }
+  });
+
+  $loginPwd.addEventListener('keydown', e => {
+    if (e.key === 'Enter') $('#btnLogin').click();
+  });
+
+  $('#btnChangePwd').addEventListener('click', () => {
+    const old = prompt('请输入当前密码：');
+    if (old === null) return; // 用户点取消
+    if (old !== getAdminPwd()) { toast('❌ 当前密码错误'); return; }
+    const np = prompt('请输入新密码（至少4位）：');
+    if (np === null) return;
+    if (!np || np.length < 4) { toast('❌ 密码至少4位，请重新操作'); return; }
+    const np2 = prompt('请再次输入新密码：');
+    if (np2 === null) return;
+    if (np !== np2) { toast('❌ 两次输入不一致'); return; }
+    setAdminPwd(np);
+    toast('✅ 密码修改成功！新密码已生效');
+  });
+
+  function renderAdmin() {
+    $adminJobCount.textContent = jobs.length;
+    if (jobs.length === 0) {
+      $adminList.innerHTML = '<p style="text-align:center;color:#ccc;padding:40px">暂无岗位，点击「＋ 添加」开始</p>';
+      return;
+    }
+    const sorted = [...jobs].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    $adminList.innerHTML = sorted.map(j =>
+      '<div class="job-item">'
+      + '<div class="info">'
+      +   '<div class="pos">' + escHtml(j.title) + ' @ ' + escHtml(j.company) + '</div>'
+      +   '<div class="comp">' + escHtml(j.type || '') + ' · ' + escHtml(j.location || '') + ' · ' + escHtml(j.salary || '面议') + '</div>'
+      + '</div>'
+      + '<span class="status ' + (j.active !== false ? 'status-active' : 'status-inactive') + '">'
+      +   (j.active !== false ? '已上架' : '已下架')
+      + '</span>'
+      + '<div class="item-actions">'
+      +   (j.active !== false
+          ? '<button class="btn btn-ghost btn-sm" data-action="toggle" data-id="' + j.id + '">⬇ 下架</button>'
+          : '<button class="btn btn-ghost btn-sm" data-action="toggle" data-id="' + j.id + '">⬆ 上架</button>')
+      +   '<button class="btn btn-ghost btn-sm" data-action="edit" data-id="' + j.id + '">✏️ 编辑</button>'
+      +   '<button class="btn btn-danger btn-sm" data-action="delete" data-id="' + j.id + '">🗑 删除</button>'
+      + '</div>'
+      + '</div>'
+    ).join('');
+
+    $adminList.querySelectorAll('button[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        if (btn.dataset.action === 'edit') openEditModal(id);
+        if (btn.dataset.action === 'delete') deleteJob(id);
+        if (btn.dataset.action === 'toggle') toggleJob(id);
+      });
+    });
+
+    // 同时渲染求职报名列表
+    renderApplications();
+    var ac = document.getElementById('applyCount');
+    if (ac) ac.textContent = applications.length;
+  }
+
+  // ===================== 弹窗 =====================
+  function openAddModal() {
+    $modalTitle.textContent = '➕ 添加岗位';
+    $editId.value = '';
+    $fTitle.value = '';
+    $fCompany.value = '';
+    $fLocation.value = '';
+    $fSalary.value = '';
+    $fType.value = '全职';
+    $fDesc.value = '';
+    $fReq.value = '';
+    $fTags.value = '';
+    $fContact.value = '';
+    $fActive.checked = true;
+    $modalOverlay.classList.add('show');
+    $fTitle.focus();
+  }
+
+  function openEditModal(id) {
+    const j = jobs.find(j => j.id === id);
+    if (!j) return;
+    $modalTitle.textContent = '✏️ 编辑岗位';
+    $editId.value = j.id;
+    $fTitle.value = j.title || '';
+    $fCompany.value = j.company || '';
+    $fLocation.value = j.location || '';
+    $fSalary.value = j.salary || '';
+    $fType.value = j.type || '全职';
+    $fDesc.value = j.desc || '';
+    $fReq.value = j.req || '';
+    $fTags.value = j.tags || '';
+    $fContact.value = j.contact || '';
+    $fActive.checked = j.active !== false;
+    $modalOverlay.classList.add('show');
+    $fTitle.focus();
+  }
+
+  function closeModal() {
+    $modalOverlay.classList.remove('show');
+  }
+
+  $('#btnAdd').addEventListener('click', openAddModal);
+  $('#btnCancel').addEventListener('click', closeModal);
+  $modalOverlay.addEventListener('click', e => {
+    if (e.target === $modalOverlay) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && $modalOverlay.classList.contains('show')) closeModal();
+  });
+
+  $('#btnSave').addEventListener('click', () => {
+    const title = $fTitle.value.trim();
+    const company = $fCompany.value.trim();
+    if (!title) { toast('⚠️ 请输入职位名称'); $fTitle.focus(); return; }
+    if (!company) { toast('⚠️ 请输入公司名称'); $fCompany.focus(); return; }
+
+    const data = {
+      title,
+      company,
+      location: $fLocation.value.trim(),
+      salary: $fSalary.value.trim(),
+      type: $fType.value,
+      desc: $fDesc.value.trim(),
+      req: $fReq.value.trim(),
+      tags: $fTags.value.trim(),
+      contact: $fContact.value.trim(),
+      active: $fActive.checked,
+    };
+
+    const editId = $editId.value;
+    if (editId) {
+      const idx = jobs.findIndex(j => j.id === editId);
+      if (idx !== -1) { jobs[idx] = { ...jobs[idx], ...data }; toast('✅ 岗位已更新'); }
+    } else {
+      data.id = genId();
+      data.createdAt = Date.now();
+      jobs.unshift(data);
+      toast('✅ 岗位已添加');
+    }
+    saveJobs();
+    closeModal();
+    renderAdmin();
+    renderPublic();
+  });
+
+  // ===================== 操作 =====================
+  function deleteJob(id) {
+    const j = jobs.find(j => j.id === id);
+    if (!confirm('确定删除「' + j.title + '」吗？此操作不可恢复。')) return;
+    jobs = jobs.filter(j => j.id !== id);
+    saveJobs();
+    renderAdmin();
+    renderPublic();
+    toast('🗑 已删除');
+  }
+
+  function toggleJob(id) {
+    const j = jobs.find(j => j.id === id);
+    if (!j) return;
+    j.active = j.active === false ? true : false;
+    saveJobs();
+    renderAdmin();
+    renderPublic();
+    toast(j.active ? '⬆ 已上架' : '⬇ 已下架');
+  }
+
+  // ===================== 导入导出 =====================
+  $('#btnExport').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(jobs, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = '招聘数据备份_' + new Date().toISOString().slice(0, 10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('📤 备份已下载');
+  });
+
+  $('#btnImport').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!Array.isArray(data)) throw new Error('格式错误');
+        if (!confirm('即将导入 ' + data.length + ' 条招聘信息，会覆盖现有数据，确定继续？')) return;
+        jobs = data;
+        saveJobs();
+        renderAdmin();
+        renderPublic();
+        toast('✅ 成功导入 ' + data.length + ' 条信息');
+      } catch (_) { toast('❌ 文件格式错误'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // ===================== 启动 =====================
+  // #reset 清空数据并重载（首次使用会自动载入默认招聘信息）
+  if (window.location.hash === '#reset') {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(UPDATE_KEY);
+    window.location.hash = '';
+    window.location.reload();
+  }
+
+  loadJobs();
+  loadApplications();
+  renderPublic();
+  updateApplyBadge();
+  if (window.location.hash === '#admin') switchPage('admin');
+  console.log('💼 招聘信息平台已就绪');
+})();
+</script>
+</body>
+</html>
