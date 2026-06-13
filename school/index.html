@@ -6,6 +6,16 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<link rel="manifest" href="data:application/manifest+json,{'name':'择校助手','short_name':'择校助手','start_url':'/zjzp/school/','display':'standalone','background_color':'#1e3a5f','theme_color':'#1e3a5f','icons':[{'src':'data:image/svg+xml,'+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"192\" height=\"192\" viewBox=\"0 0 192 192\"><rect width=\"192\" height=\"192\" rx=\"32\" fill=\"%231e3a5f\"/><text x=\"96\" y=\"115\" text-anchor=\"middle\" fill=\"white\" font-size=\"80\" font-weight=\"bold\" font-family=\"sans-serif\">🎓</text></svg>')+','sizes':'192x192','type':'image/svg+xml'}]}">
+<meta name="theme-color" content="#1e3a5f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="择校助手">
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('data:application/javascript,'+encodeURIComponent("self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)))})"));
+}
+</script>
 <title>择校助手</title>
 <style>
 :root {
@@ -516,6 +526,7 @@ body {
 <header class="header">
   <div class="header-top">
     <div class="logo"><span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 3 4 6 4s6-2 6-4v-5"/></svg></span>择校助手</div>
+    <button id="btnMatch" style="position:absolute;top:12px;right:80px;background:rgba(255,255,255,0.18);border:none;color:#fff;padding:7px 14px;border-radius:16px;font-size:12px;cursor:pointer;backdrop-filter:blur(10px);display:flex;align-items:center;gap:5px;z-index:10;font-weight:600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M16.5 16.5L21 21"/></svg>智能匹配</button>
     <button id="btnAdmin" style="position:absolute;top:12px;right:16px;background:rgba(255,255,255,0.12);border:none;color:#fff;padding:7px 14px;border-radius:16px;font-size:12px;cursor:pointer;backdrop-filter:blur(10px);display:flex;align-items:center;gap:5px;z-index:10"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>管理</button>
   </div>
   <div class="header-search">
@@ -651,6 +662,31 @@ body {
 <!-- 浮动添加按钮（管理员可见） -->
 <button id="floatAddBtn" style="display:none;position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:26px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(51,102,255,0.35);z-index:150;transition:0.2s" title="添加学校">＋</button>
 
+<!-- ========== 智能匹配弹窗 ========== -->
+<div class="modal-overlay" id="matchModal">
+  <div class="modal">
+    <h3 style="margin-bottom:4px">🎯 智能择校匹配</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:18px">输入条件，自动推荐匹配院校</p>
+    <div class="form-row">
+      <div class="form-group"><label>GPA / 均分</label><input type="text" id="mGpa" placeholder="如：3.5 或 85分" /></div>
+      <div class="form-group"><label>专业方向</label><select id="mMajor"><option value="">不限</option><option value="商科">商科</option><option value="工科">工科</option><option value="理科">理科</option><option value="文科">文科</option><option value="医学">医学</option><option value="法学">法学</option><option value="艺术">艺术</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>雅思</label><input type="text" id="mIelts" placeholder="如：6.5" /></div>
+      <div class="form-group"><label>托福</label><input type="text" id="mToefl" placeholder="如：90" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>年预算</label><select id="mBudget"><option value="">不限</option><option value="10">10万以下</option><option value="20">10-20万</option><option value="35">20-35万</option><option value="50">35-50万</option><option value="100">50万以上</option></select></div>
+      <div class="form-group"><label>意向国家</label><select id="mCountry"><option value="">不限</option><option value="美国">美国</option><option value="英国">英国</option><option value="澳大利亚">澳大利亚</option><option value="加拿大">加拿大</option><option value="新加坡">新加坡</option><option value="日本">日本</option><option value="德国">德国</option></select></div>
+    </div>
+    <div id="matchResult" style="display:none;margin-top:14px;max-height:320px;overflow-y:auto"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost-modal" id="btnMatchCancel">取消</button>
+      <button class="filter-chip active" style="font-size:14px;cursor:pointer" id="btnMatchGo">🔍 开始匹配</button>
+    </div>
+  </div>
+</div>
+
 <!-- ========== 对比弹窗 ========== -->
 <div class="modal-overlay" id="compareModal">
   <div class="modal" style="max-width:800px">
@@ -730,6 +766,29 @@ body {
     {id:39,name:"小站教育",ename:"Zhan.com",country:"中国",countryFlag:"🇨🇳",qs:0,type:"在线培训",city:"全国覆盖",degree:["雅思","托福"],major:["文科"],programs:["雅思在线","托福在线","1对1定制","AI模考"],fee:"¥3,000起",deadline:"随时报名",desc:"知名在线出国考试培训机构，AI+名师双驱动。",color:"#00a870"},
     {id:40,name:"朗阁教育",ename:"Longre Education",country:"中国",countryFlag:"🇨🇳",qs:0,type:"培训机构",city:"全国覆盖",degree:["雅思","托福"],major:["文科"],programs:["雅思精品","托福精品","SAT","GRE","GMAT"],fee:"¥5,000起",deadline:"随时报名",desc:"老牌留学考试培训机构，20年教学经验。",color:"#1e3a5f"}
   ];
+
+  // 申请要求数据（id → 要求）
+  const requirements = {
+    1:{ielts:"7.5",toefl:"100",gpa:"3.8/4.0",rate:"7%",gre:"325+"},
+    2:{ielts:"7.5",toefl:"110",gpa:"3.7/4.0",rate:"21%",gre:"320+"},
+    3:{ielts:"7.5",toefl:"110",gpa:"3.7/4.0",rate:"17%",gre:"320+"},
+    4:{ielts:"7.5",toefl:"105",gpa:"3.8/4.0",rate:"5%",gre:"325+"},
+    5:{ielts:"7.0",toefl:"100",gpa:"3.7/4.0",rate:"4%",gre:"320+"},
+    6:{ielts:"7.0",toefl:"100",gpa:"3.5/4.0",rate:"27%",gre:"315+"},
+    7:{ielts:"6.5",toefl:"90",gpa:"3.3/4.0",rate:"15%",gre:"310+"},
+    8:{ielts:"7.0",toefl:"100",gpa:"3.3/4.0",rate:"12%",gre:"310+"},
+    9:{ielts:"7.0",toefl:"90",gpa:"3.5/4.0",rate:"16%",gre:"315+"},
+    10:{ielts:"7.0",toefl:"100",gpa:"3.5/4.0",rate:"14%",gre:"320+"},
+    11:{ielts:"7.0",toefl:"90",gpa:"3.2/4.0",rate:"20%",gre:"310+"},
+    12:{ielts:"7.0",toefl:"100",gpa:"3.3/4.0",rate:"40%",gre:"315+"},
+    13:{ielts:"6.5",toefl:"90",gpa:"3.0/4.0",rate:"35%",gre:"310+"},
+    14:{ielts:"6.5",toefl:"90",gpa:"3.2/4.0",rate:"25%",gre:"310+"},
+    15:{ielts:"6.5",toefl:"90",gpa:"3.0/4.0",rate:"25%",gre:"310+"},
+    18:{ielts:"6.5",toefl:"90",gpa:"3.5/4.0",rate:"3%",gre:"320+"},
+    19:{ielts:"6.5",toefl:"90",gpa:"3.5/4.0",rate:"2%",gre:"320+"},
+    21:{ielts:"7.0",toefl:"100",gpa:"3.5/4.0",rate:"6%",gre:"320+"},
+    22:{ielts:"7.0",toefl:"95",gpa:"3.3/4.0",rate:"32%",gre:"315+"},
+  };
 
   // 筛选器选项
   const countries = ["全部","美国","英国","澳大利亚","加拿大","新加坡","日本","德国","法国","韩国","中国香港","中国","瑞士"];
@@ -893,6 +952,7 @@ body {
       +   '<div class="en-name">' + s.ename + '</div>'
       + '</div></div>'
 
+      + (function() { var req = requirements[s.id] || {}; return req.ielts ? '<div class="detail-section"><h4>📋 申请要求</h4><div class="detail-grid"><div class="detail-item"><div class="label">雅思</div><div class="value">' + req.ielts + '</div></div><div class="detail-item"><div class="label">托福</div><div class="value">' + req.toefl + '</div></div><div class="detail-item"><div class="label">GPA</div><div class="value">' + req.gpa + '</div></div><div class="detail-item"><div class="label">录取率</div><div class="value">' + (req.rate||'-') + '</div></div>' + (req.gre?'<div class="detail-item"><div class="label">GRE</div><div class="value">'+req.gre+'</div></div>':'') + '</div></div>' : ''; })()
       + '<div class="detail-section"><h4>📋 基本信息</h4>'
       + '<div class="detail-grid">'
       + '<div class="detail-item"><div class="label">国家</div><div class="value">' + s.countryFlag + ' ' + s.country + '</div></div>'
@@ -1137,6 +1197,102 @@ body {
     };
     input.click();
   };
+
+  // ===================== 智能匹配 =====================
+  document.getElementById('btnMatch').addEventListener('click', function() {
+    document.getElementById('matchModal').classList.add('show');
+    document.getElementById('matchResult').style.display = 'none';
+  });
+  document.getElementById('btnMatchCancel').addEventListener('click', function() {
+    document.getElementById('matchModal').classList.remove('show');
+  });
+  document.getElementById('matchModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  document.getElementById('btnMatchGo').addEventListener('click', function() {
+    var gpa = parseFloat(document.getElementById('mGpa').value) || 0;
+    var ielts = parseFloat(document.getElementById('mIelts').value) || 0;
+    var toefl = parseFloat(document.getElementById('mToefl').value) || 0;
+    var major = document.getElementById('mMajor').value;
+    var budget = parseInt(document.getElementById('mBudget').value) || 999;
+    var country = document.getElementById('mCountry').value;
+    var gpaIs100 = gpa > 4; // 百分制
+
+    var allSchools = getAllSchools().filter(function(s) { return s.qs > 0; }); // only ranked schools
+
+    var results = allSchools.map(function(s) {
+      var req = requirements[s.id] || {};
+      var score = 0;
+      var reasons = [];
+
+      // GPA matching
+      var reqGpa = parseFloat(req.gpa) || 0;
+      if (gpa > 0 && reqGpa > 0) {
+        var userGpa4 = gpaIs100 ? (gpa / 100 * 4) : gpa;
+        if (userGpa4 >= reqGpa) { score += 30; reasons.push('GPA达标'); }
+        else if (userGpa4 >= reqGpa - 0.3) { score += 15; reasons.push('GPA接近'); }
+        else { score -= 10; reasons.push('GPA偏低'); }
+      }
+
+      // IELTS matching
+      var reqIelts = parseFloat(req.ielts) || 0;
+      if (ielts > 0 && reqIelts > 0) {
+        if (ielts >= reqIelts) { score += 25; reasons.push('雅思达标'); }
+        else if (ielts >= reqIelts - 0.5) { score += 10; reasons.push('雅思接近'); }
+        else { score -= 15; reasons.push('雅思偏低'); }
+      }
+
+      // TOEFL matching
+      var reqToefl = parseFloat(req.toefl) || 0;
+      if (toefl > 0 && reqToefl > 0) {
+        if (toefl >= reqToefl) { score += 25; reasons.push('托福达标'); }
+        else if (toefl >= reqToefl - 10) { score += 10; reasons.push('托福接近'); }
+        else { score -= 15; reasons.push('托福偏低'); }
+      }
+
+      // Major matching
+      if (major && s.major && s.major.indexOf(major) !== -1) { score += 10; reasons.push('专业匹配'); }
+
+      // Budget matching (rough)
+      if (budget < 999 && s.fee) {
+        var feeNum = parseFloat(s.fee.replace(/[^0-9.]/g,'')) || 0;
+        var userBudget = budget * 10000;
+        var currency = s.fee.indexOf('$') !== -1 ? 7 : s.fee.indexOf('£') !== -1 ? 9 : s.fee.indexOf('€') !== -1 ? 8 : s.fee.indexOf('A$') !== -1 ? 5 : s.fee.indexOf('C$') !== -1 ? 5 : s.fee.indexOf('¥') !== -1 ? 1 : s.fee.indexOf('S$') !== -1 ? 5 : s.fee.indexOf('CHF') !== -1 ? 8 : 1;
+        var feeRMB = feeNum * currency;
+        if (feeRMB <= userBudget) { score += 10; reasons.push('预算合适'); }
+      }
+
+      // Country matching
+      if (country && s.country === country) { score += 5; }
+
+      return { school: s, score: score, reasons: reasons, req: req };
+    }).filter(function(r) { return r.score > 0; }).sort(function(a, b) { return b.score - a.score; }).slice(0, 10);
+
+    var resultDiv = document.getElementById('matchResult');
+    resultDiv.style.display = 'block';
+
+    if (results.length === 0) {
+      resultDiv.innerHTML = '<div style="text-align:center;padding:20px;color:#999">没有匹配结果，请放宽条件重试</div>';
+      return;
+    }
+
+    resultDiv.innerHTML = results.map(function(r, i) {
+      var req = r.req;
+      var matchPercent = Math.min(95, Math.round(r.score / 110 * 100));
+      var level = matchPercent >= 70 ? '#2eaa5a' : matchPercent >= 45 ? '#f5a623' : '#e8456b';
+      return '<div style="background:#fafbfd;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="openDetail(' + r.school.id + ');document.getElementById(\'matchModal\').classList.remove(\'show\')">'
+        + '<div style="width:44px;height:44px;border-radius:10px;background:' + r.school.color + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;flex-shrink:0">' + r.school.name[0] + '</div>'
+        + '<div style="flex:1;min-width:0">'
+        +   '<div style="display:flex;justify-content:space-between;align-items:center">'
+        +     '<span style="font-weight:600;font-size:14px">' + (i+1) + '. ' + r.school.name + '</span>'
+        +     '<span style="font-weight:700;font-size:13px;color:' + level + '">匹配度 ' + matchPercent + '%</span>'
+        +   '</div>'
+        +   '<div style="font-size:11px;color:var(--text3);margin-top:3px">' + (req.ielts?' 雅思'+req.ielts:'') + (req.toefl?' · 托福'+req.toefl:'') + (req.gpa?' · GPA'+req.gpa:'') + (req.rate?' · 录取率'+req.rate:'') + '</div>'
+        +   '<div style="font-size:11px;margin-top:3px">' + r.reasons.map(function(x) { return '<span style="margin-right:6px;color:' + (x.indexOf('达标')!==-1||x.indexOf('匹配')!==-1||x.indexOf('合适')!==-1?'#2eaa5a':x.indexOf('接近')!==-1?'#f5a623':'#e8456b') + '">' + x + '</span>'; }).join('') + '</div>'
+        + '</div></div>';
+    }).join('');
+  });
 
   // ===================== 移动端 =====================
   window.scrollToTop = function() { window.scrollTo({ top: 0, behavior: 'smooth' }); };
@@ -1387,6 +1543,7 @@ body {
       +   '<div class="en-name">' + (s.ename||'') + '</div>'
       + '</div></div>'
 
+      + (function() { var req = requirements[s.id] || {}; return req.ielts ? '<div class="detail-section"><h4>📋 申请要求</h4><div class="detail-grid"><div class="detail-item"><div class="label">雅思</div><div class="value">' + req.ielts + '</div></div><div class="detail-item"><div class="label">托福</div><div class="value">' + req.toefl + '</div></div><div class="detail-item"><div class="label">GPA</div><div class="value">' + req.gpa + '</div></div><div class="detail-item"><div class="label">录取率</div><div class="value">' + (req.rate||'-') + '</div></div>' + (req.gre?'<div class="detail-item"><div class="label">GRE</div><div class="value">'+req.gre+'</div></div>':'') + '</div></div>' : ''; })()
       + '<div class="detail-section"><h4>📋 基本信息</h4>'
       + '<div class="detail-grid">'
       + '<div class="detail-item"><div class="label">国家</div><div class="value">' + (s.countryFlag||'') + ' ' + s.country + '</div></div>'
