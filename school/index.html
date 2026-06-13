@@ -550,6 +550,9 @@ body {
   <div class="filter-section">
     <div class="filter-label">QS 世界排名</div>
     <div class="filter-row" id="rankFilters"></div>
+
+    <div class="filter-label">💰 学费预算（人民币/年）</div>
+    <div class="filter-row" id="budgetFilters"></div>
   </div>
 
   <!-- 历史记录 -->
@@ -686,6 +689,7 @@ body {
     <h3 style="margin-bottom:16px">🔀 院校对比</h3>
     <div id="compareContent"></div>
     <div style="text-align:center;margin-top:16px">
+      <button class="filter-chip active" style="font-size:14px;cursor:pointer" onclick="printCompareReport()">🖨️ 打印报告</button>
       <button class="filter-chip" style="font-size:14px;cursor:pointer" onclick="document.getElementById('compareModal').classList.remove('show')">关闭</button>
     </div>
   </div>
@@ -761,6 +765,7 @@ body {
   ];
 
   // 申请要求数据（id → 要求）
+  const scholarship = {1:'🚀 MIT全额奖',2:'🎓 志奋领奖学金',3:'🎓 Rhodes奖学金',4:'🚀 哈佛中国基金',5:'🚀 Knight-Hennessy',7:'🎓 NUS研究奖',8:'🎓 UCL全球奖',10:'🚀 帝国理工奖',12:'🎓 加拿大总督奖',19:'🎓 清华奖学金',18:'🎓 北大奖学金'};
   const requirements = {
     1:{ielts:"7.5",toefl:"100",gpa:"3.8/4.0",rate:"7%",gre:"325+"},
     2:{ielts:"7.5",toefl:"110",gpa:"3.7/4.0",rate:"21%",gre:"320+"},
@@ -788,11 +793,13 @@ body {
   const degrees = ["全部","小学","初中","高中","大学","专升本","硕士","博士","雅思","托福"];
   const majors = ["全部","商科","工科","理科","文科","医学","法学","艺术","教育"];
   const ranks = [{label:"全部",min:0,max:9999},{label:"QS前10",min:1,max:10},{label:"QS前50",min:1,max:50},{label:"QS 50-100",min:50,max:100},{label:"QS 100+",min:100,max:9999}];
+  const budgets = [{label:"全部",max:999},{label:"10万以下",max:100000},{label:"10-20万",max:200000},{label:"20-35万",max:350000},{label:"35万+",max:999}]
 
   let activeCountry = "全部";
   let activeDegree = "全部";
   let activeMajor = "全部";
   let activeRank = ranks[0];
+  let activeBudget = budgets[0];
   let sortByRank = true;
   let showFavOnly = false;
 
@@ -862,6 +869,9 @@ body {
     $('#rankFilters').innerHTML = ranks.map((r,i) =>
       '<button class="filter-chip' + (activeRank===r?' active':'') + '" data-rank="' + i + '">' + r.label + '</button>'
     ).join('');
+    $('#budgetFilters').innerHTML = budgets.map((b,i) =>
+      '<button class="filter-chip' + (activeBudget===b?' active':'') + '" data-budget="' + i + '">' + b.label + '</button>'
+    ).join('');
 
     // 事件绑定
     document.querySelectorAll('[data-country]').forEach(b =>
@@ -872,6 +882,33 @@ body {
       b.addEventListener('click', () => { activeMajor = b.dataset.major; renderFilters(); renderSchools(); }));
     document.querySelectorAll('[data-rank]').forEach(b =>
       b.addEventListener('click', () => { activeRank = ranks[parseInt(b.dataset.rank)]; renderFilters(); renderSchools(); }));
+    document.querySelectorAll('[data-budget]').forEach(b =>
+      b.addEventListener('click', () => { activeBudget = budgets[parseInt(b.dataset.budget)]; renderFilters(); renderSchools(); }));
+
+  // 计算学费人民币
+  function calcRMB(fee) {
+    if (!fee || fee === '面议' || fee === '免学费') return 0;
+    var num = parseFloat(fee.replace(/[^0-9.]/g,'')) || 0;
+    var cur = fee.match(/[$£€]|A\$|C\$|S\$|₩|CHF/);
+    var sym = cur ? cur[0] : '';
+    var rate = ({'$':7.2,'£':9.1,'€':7.9,'A$':4.8,'C$':5.2,'S$':5.4,'₩':0.0055,'CHF':8.1})[sym] || 1;
+    if (sym === '₩') return num * 10000 * rate;
+    return num * rate;
+  }
+
+  // 倒计时
+  function deadlineCountdown(deadline) {
+    if (!deadline || deadline === '滚动招生' || deadline === '随时报名') return {text:'滚动招生',urgent:false};
+    var now = new Date();
+    var m = deadline.match(/(\d+)月(\d+)日/);
+    if (!m) return {text:deadline,urgent:false};
+    var target = new Date(now.getFullYear(), parseInt(m[1])-1, parseInt(m[2]));
+    if (target < now) target.setFullYear(target.getFullYear()+1);
+    var days = Math.ceil((target - now) / 86400000);
+    if (days <= 30) return {text:'⏰ 仅剩'+days+'天',urgent:true};
+    if (days <= 90) return {text:'📅 '+days+'天后截止',urgent:false};
+    return {text:deadline,urgent:false};
+  }
   }
 
   // ===================== 渲染院校列表 =====================
@@ -885,6 +922,8 @@ body {
       if (activeDegree !== '全部' && !s.degree.includes(activeDegree)) return false;
       if (activeMajor !== '全部' && !s.major.includes(activeMajor)) return false;
       if (s.qs < activeRank.min || s.qs > activeRank.max) return false;
+      var rmb = calcRMB(s.fee);
+      if (activeBudget.max < 999 && (rmb === 0 || rmb > activeBudget.max)) return false;
       if (keyword) {
         return s.name.includes(keyword) || s.ename.toLowerCase().includes(keyword) ||
                s.country.includes(keyword) || s.programs.some(p => p.includes(keyword)) ||
@@ -917,7 +956,9 @@ body {
         +     '<span class="meta-country">' + s.countryFlag + ' ' + s.country + '</span>'
         +     '<span class="meta-type">' + s.type + '</span>'
         +     '<span class="meta-fee">' + convertRMB(s.fee||'').split('/')[0] + '</span>'
+        +     (function(){var cd=deadlineCountdown(s.deadline); return cd.urgent?'<span style="font-size:11px;color:var(--red);font-weight:600;margin-left:4px">'+cd.text+'</span>':'';})()
         +   '</div>'
+        +   (scholarship[s.id]?'<div style="margin-bottom:4px"><span style="font-size:11px;background:#fff8e1;color:#c8a44e;padding:2px 8px;border-radius:4px;font-weight:600">'+scholarship[s.id]+'</span></div>':'')
         +   '<div class="school-programs">'
         +     s.programs.slice(0,4).map((p,i) => '<span class="program-tag' + (i===0?' hot':'') + '">' + p + '</span>').join('')
         +   '</div>'
@@ -1148,6 +1189,14 @@ body {
     html += '</tbody></table>';
     document.getElementById('compareContent').innerHTML = html;
     document.getElementById('compareModal').classList.add('show');
+  };
+
+  // 打印对比报告
+  window.printCompareReport = function() {
+    var content = document.getElementById('compareContent').innerHTML;
+    var win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>择校对比报告</title><style>body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;padding:40px;color:#1a1a2e}table{width:100%;border-collapse:collapse;margin:20px 0}th,td{padding:12px 16px;border:1px solid #ddd;text-align:left;font-size:14px}th{background:#f5f6f8;font-weight:700}h1{font-size:22px;margin-bottom:8px}.date{color:#999;font-size:13px;margin-bottom:24px}@media print{body{margin:0;padding:20px}button{display:none}}.btn-print{padding:12px 28px;background:#3366ff;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;margin-bottom:20px}</style></head><body><h1>择校对比报告</h1><div class="date">生成日期：'+new Date().toLocaleDateString('zh-CN')+'</div><button class="btn-print" onclick="window.print()">打印报告</button>'+content+'</body></html>');
+    toast('📄 报告窗口已打开');
   };
 
   // 关闭对比弹窗
@@ -1495,6 +1544,8 @@ body {
       if (activeDegree !== '全部' && !(s.degree||[]).includes(activeDegree)) return false;
       if (activeMajor !== '全部' && !(s.major||[]).includes(activeMajor)) return false;
       if (s.qs < activeRank.min || s.qs > activeRank.max) return false;
+      var rmb = calcRMB(s.fee);
+      if (activeBudget.max < 999 && (rmb === 0 || rmb > activeBudget.max)) return false;
       if (keyword) {
         return s.name.includes(keyword) || (s.ename||'').toLowerCase().includes(keyword) ||
                s.country.includes(keyword) || (s.programs||[]).some(function(p){return p.includes(keyword)}) ||
@@ -1532,7 +1583,9 @@ body {
         +     '<span class="meta-country">' + (s.countryFlag||'') + ' ' + s.country + '</span>'
         +     '<span class="meta-type">' + (s.type||'') + '</span>'
         +     '<span class="meta-fee">' + convertRMB(s.fee||'').split('/')[0] + '</span>'
+        +     (function(){var cd=deadlineCountdown(s.deadline); return cd.urgent?'<span style="font-size:11px;color:var(--red);font-weight:600;margin-left:4px">'+cd.text+'</span>':'';})()
         +   '</div>'
+        +   (scholarship[s.id]?'<div style="margin-bottom:4px"><span style="font-size:11px;background:#fff8e1;color:#c8a44e;padding:2px 8px;border-radius:4px;font-weight:600">'+scholarship[s.id]+'</span></div>':'')
         +   '<div class="school-programs">'
         +     (s.programs||[]).slice(0,4).map(function(p,i){return '<span class="program-tag'+(i===0?' hot':'')+'">'+p+'</span>'}).join('')
         +   '</div>'
