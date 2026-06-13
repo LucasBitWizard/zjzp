@@ -93,6 +93,80 @@ html { scroll-behavior: smooth; }
   50% { transform: translateY(-8px); }
 }
 .empty-icon { animation: float 3s ease-in-out infinite; }
+
+/* 阅读进度条 */
+.progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), #8b5cf6);
+  z-index: 999;
+  transition: width 0.15s linear;
+  border-radius: 0 2px 2px 0;
+}
+
+/* 返回顶部 */
+.back-to-top {
+  position: fixed;
+  bottom: 100px; right: 24px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  border: none;
+  cursor: pointer;
+  z-index: 148;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  opacity: 0;
+  transform: translateY(10px);
+}
+.back-to-top.show { display: flex; opacity: 1; transform: translateY(0); }
+.back-to-top:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+
+/* 波纹效果 */
+.ripple { position: relative; overflow: hidden; }
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.4);
+  transform: scale(0);
+  animation: rippleAnim 0.6s ease-out;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* Toast 滑入 */
+.toast {
+  animation: toastIn 0.3s ease;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* 筛选徽章 */
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  animation: badgeIn 0.3s ease;
+}
+@keyframes badgeIn {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
 body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
@@ -776,6 +850,17 @@ body {
   </div>
 </nav>
 
+<!-- 阅读进度条 -->
+<div class="progress-bar" id="progressBar" style="width:0%"></div>
+
+<!-- 返回顶部 -->
+<button class="back-to-top" id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg>
+</button>
+
+<!-- 活跃筛选标签 -->
+<div id="activeFilters" style="text-align:center;margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center"></div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1455,6 +1540,53 @@ body {
     19: [{bg:"985 CS",gpa:"3.8",toefl:"105",gre:"325",result:"录取 CS MS"}, {bg:"211 经管",gpa:"3.6",toefl:"100",gre:"320",result:"录取管理 MS"}],
   };
 
+  // ===================== 进度条 + 返回顶部 =====================
+  window.addEventListener('scroll', function() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    var progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+    document.getElementById('progressBar').style.width = progress + '%';
+    var btn = document.getElementById('backToTop');
+    if (scrollTop > 400) btn.classList.add('show');
+    else btn.classList.remove('show');
+  });
+
+  // ===================== 波纹效果 =====================
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('.filter-chip, .btn, button:not(#backToTop)');
+    if (!btn || btn.classList.contains('ripple')) return;
+    btn.classList.add('ripple');
+    var rect = btn.getBoundingClientRect();
+    var ripple = document.createElement('span');
+    ripple.className = 'ripple-effect';
+    ripple.style.left = (e.clientX - rect.left) + 'px';
+    ripple.style.top = (e.clientY - rect.top) + 'px';
+    ripple.style.width = ripple.style.height = Math.max(rect.width, rect.height) + 'px';
+    btn.appendChild(ripple);
+    setTimeout(function() { ripple.remove(); }, 600);
+  });
+
+  // ===================== 活跃筛选徽章 =====================
+  function updateActiveFilters() {
+    var chips = [];
+    if (activeCountry !== '全部') chips.push({label:'🌍 '+activeCountry, action:function(){activeCountry='全部';updateAllFilters();}});
+    if (activeDegree !== '全部') chips.push({label:'🎯 '+activeDegree, action:function(){activeDegree='全部';updateAllFilters();}});
+    if (activeMajor !== '全部') chips.push({label:'📚 '+activeMajor, action:function(){activeMajor='全部';updateAllFilters();}});
+    if (activeRank !== ranks[0]) chips.push({label:'🏆 '+activeRank.label, action:function(){activeRank=ranks[0];updateAllFilters();}});
+    if (activeBudget !== budgets[0]) chips.push({label:'💰 '+activeBudget.label, action:function(){activeBudget=budgets[0];updateAllFilters();}});
+    var container = document.getElementById('activeFilters');
+    if (!container) return;
+    container.innerHTML = chips.map(function(c){return '<span class="filter-badge" onclick="arguments[0].stopPropagation()">'+c.label+' ×</span>';}).join('');
+    container.querySelectorAll('.filter-badge').forEach(function(badge, i) {
+      badge.addEventListener('click', function() { chips[i].action(); });
+    });
+  }
+  function updateAllFilters() {
+    renderFilters();
+    showSkeleton();
+    setTimeout(function(){renderSchools();scrollToResults();updateActiveFilters();}, 150);
+  }
+
   // ===================== 移动端 =====================
   window.scrollToTop = function() { window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
@@ -1576,6 +1708,7 @@ body {
     saveCustomSchools();
     $('#addSchoolModal').classList.remove('show');
     renderSchools();
+    updateActiveFilters();
   });
 
   // 获取隐藏的内置学校ID列表
@@ -1748,6 +1881,7 @@ body {
   renderSchools();
   renderHistory();
   updateCompareUI();
+  updateActiveFilters();
   console.log('🎓 择校助手已就绪');
   console.log('  - 管理员密码：' + DEFAULT_ADMIN_PWD);
 })();
