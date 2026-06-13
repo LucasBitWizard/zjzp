@@ -26,6 +26,73 @@
   --shadow: 0 2px 12px rgba(0,0,0,0.05);
   --radius: 14px;
 }* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+/* 卡片入场动画 */
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.school-card { animation: cardIn 0.35s ease both; }
+
+/* 骨架屏 */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+.skeleton-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+.skeleton-avatar { width: 52px; height: 52px; border-radius: 14px; }
+.skeleton-line { height: 12px; margin-bottom: 8px; }
+.skeleton-line.short { width: 60%; }
+.skeleton-line.medium { width: 80%; }
+
+/* 筛选栏过渡 */
+.filter-section { transition: opacity 0.2s, max-height 0.3s; }
+.filter-chip {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.filter-chip:active { transform: scale(0.95); }
+
+/* 按钮脉冲 */
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(51,102,255,0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(51,102,255,0); }
+}
+#floatAddBtn { animation: pulse 2s infinite; }
+
+/* 卡片微交互 */
+.school-card {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease;
+}
+.school-card:active { transform: scale(0.985); }
+
+/* 数字跳动 */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.count-updated { animation: countUp 0.3s ease; }
+
+/* 空状态动画 */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.empty-icon { animation: float 3s ease-in-out infinite; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   background: var(--bg);
@@ -574,7 +641,7 @@ body {
 
   <!-- 空状态 -->
   <div id="emptyState" style="display:none;text-align:center;padding:60px 20px;color:#ccc">
-    <div style="font-size:56px;margin-bottom:12px">🔍</div>
+    <div class="empty-icon" style="font-size:56px;margin-bottom:12px">🔍</div>
     <p style="font-size:15px">未找到匹配的院校</p>
   </div>
 </div>
@@ -875,15 +942,15 @@ body {
 
     // 事件绑定
     document.querySelectorAll('[data-country]').forEach(b =>
-      b.addEventListener('click', () => { activeCountry = b.dataset.country; renderFilters(); renderSchools(); }));
+      b.addEventListener('click', () => { activeCountry = b.dataset.country; renderFilters(); showSkeleton(); setTimeout(function(){renderSchools();scrollToResults()},150); }));
     document.querySelectorAll('[data-degree]').forEach(b =>
-      b.addEventListener('click', () => { activeDegree = b.dataset.degree; renderFilters(); renderSchools(); }));
+      b.addEventListener('click', () => { activeDegree = b.dataset.degree; renderFilters(); showSkeleton(); setTimeout(function(){renderSchools();scrollToResults()},150); }));
     document.querySelectorAll('[data-major]').forEach(b =>
-      b.addEventListener('click', () => { activeMajor = b.dataset.major; renderFilters(); renderSchools(); }));
+      b.addEventListener('click', () => { activeMajor = b.dataset.major; renderFilters(); showSkeleton(); setTimeout(function(){renderSchools();scrollToResults()},150); }));
     document.querySelectorAll('[data-rank]').forEach(b =>
-      b.addEventListener('click', () => { activeRank = ranks[parseInt(b.dataset.rank)]; renderFilters(); renderSchools(); }));
+      b.addEventListener('click', () => { activeRank = ranks[parseInt(b.dataset.rank)]; renderFilters(); showSkeleton(); setTimeout(function(){renderSchools();scrollToResults()},150); }));
     document.querySelectorAll('[data-budget]').forEach(b =>
-      b.addEventListener('click', () => { activeBudget = budgets[parseInt(b.dataset.budget)]; renderFilters(); renderSchools(); }));
+      b.addEventListener('click', () => { activeBudget = budgets[parseInt(b.dataset.budget)]; renderFilters(); showSkeleton(); setTimeout(function(){renderSchools();scrollToResults()},150); }));
 
   // 计算学费人民币
   function calcRMB(fee) {
@@ -934,7 +1001,7 @@ body {
 
     if (sortByRank) filtered.sort((a,b) => a.qs - b.qs);
 
-    $('#resultCount').textContent = '共 ' + filtered.length + ' 所院校';
+    animateCount(document.getElementById('resultCount'), filtered.length);
 
     if (filtered.length === 0) {
       $('#schoolGrid').innerHTML = '';
@@ -946,7 +1013,7 @@ body {
     $('#schoolGrid').innerHTML = filtered.map(s => {
       const isFav = favs.includes(s.id);
       const rankClass = s.qs <= 10 ? 'top10' : s.qs <= 50 ? 'top50' : '';
-      return '<div class="school-card" onclick="openDetail(' + s.id + ')">'
+      return '<div class="school-card" onclick="openDetail(' + s.id + ')" style="animation-delay:' + (idx*0.05).toFixed(2) + 's">'
         + (s.qs <= 50 ? '<div class="rank-badge ' + rankClass + '"><span class="num">' + s.qs + '</span>QS</div>' : '')
         + '<div class="school-logo" style="background:' + s.color + '">' + s.name[0] + '</div>'
         + '<div class="school-info">'
@@ -1047,8 +1114,35 @@ body {
     renderSchools();
   };
 
+  // 骨架屏
+  function showSkeleton() {
+    var html = '';
+    for(var i=0;i<4;i++) html += '<div class="skeleton-card"><div class="skeleton skeleton-avatar"></div><div style="flex:1"><div class="skeleton skeleton-line medium"></div><div class="skeleton skeleton-line short"></div><div class="skeleton skeleton-line" style="width:40%"></div></div></div>';
+    $('#schoolGrid').innerHTML = html;
+    $('#emptyState').style.display = 'none';
+  }
+
+  // 渲染完成后滚动到顶部
+  function scrollToResults() {
+    var grid = document.getElementById('schoolGrid');
+    if (grid && grid.children.length > 0) {
+      grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // 数字动画
+  function animateCount(el, count) {
+    el.textContent = '共 ' + count + ' 所院校';
+    el.classList.remove('count-updated');
+    void el.offsetWidth;
+    el.classList.add('count-updated');
+  }
+
   // 搜索
-  $('#searchInput').addEventListener('input', renderSchools);
+  $('#searchInput').addEventListener('input', function() {
+    showSkeleton();
+    setTimeout(function() { renderSchools(); scrollToResults(); }, 200);
+  });
 
   // ===================== 管理功能 =====================
   const ADMIN_PWD_KEY = 'school_app_admin_pwd';
@@ -1556,7 +1650,7 @@ body {
 
     if (sortByRank) filtered.sort(function(a,b) { return (a.qs||9999) - (b.qs||9999); });
 
-    $('#resultCount').textContent = '共 ' + filtered.length + ' 所院校';
+    animateCount(document.getElementById('resultCount'), filtered.length);
 
     if (filtered.length === 0) {
       $('#schoolGrid').innerHTML = '';
@@ -1565,13 +1659,13 @@ body {
     }
     $('#emptyState').style.display = 'none';
 
-    $('#schoolGrid').innerHTML = filtered.map(function(s) {
+    $('#schoolGrid').innerHTML = filtered.map(function(s, idx) {
       var favs2 = getFavorites();
       var isFav = favs2.includes(s.id);
       var rankClass = s.qs <= 10 ? 'top10' : s.qs <= 50 ? 'top50' : '';
       var isCustom = s.id > 100000;
 
-      return '<div class="school-card" onclick="openDetail(' + s.id + ')">'
+      return '<div class="school-card" onclick="openDetail(' + s.id + ')" style="animation-delay:' + (idx*0.05).toFixed(2) + 's">'
         + '<input type="checkbox" class="compare-check"' + (compareIds.indexOf(s.id)!==-1?' checked':'') + ' onclick="toggleCompareCheck(event,' + s.id + ')" />'
         + (s.qs > 0 && s.qs <= 50 ? '<div class="rank-badge ' + rankClass + '"><span class="num">' + s.qs + '</span>QS</div>' : '')
         + (isAdmin ? '<div class="admin-actions" onclick="event.stopPropagation()"><button style="border:none;background:#f0f4ff;color:var(--primary);padding:3px 8px;border-radius:10px;font-size:11px;cursor:pointer" onclick="event.stopPropagation();editSchool(' + s.id + ')">✏️</button><button style="border:none;background:#fef2f2;color:var(--red);padding:3px 8px;border-radius:10px;font-size:11px;cursor:pointer" onclick="event.stopPropagation();deleteSchool(' + s.id + ')">🗑</button></div>' : '')
