@@ -780,8 +780,19 @@ body {
 
   function showFavorites() {
     showFavOnly = !showFavOnly;
-    if (showFavOnly) toast('📌 仅显示收藏院校');
-    else toast('📋 显示全部院校');
+    var filterSections = document.querySelectorAll('.filter-section');
+    var statsBar = document.querySelector('.stats-bar');
+    if (showFavOnly) {
+      filterSections.forEach(function(el) { el.style.display = 'none'; });
+      if (statsBar) statsBar.style.display = 'none';
+      document.getElementById('historyRow').style.display = 'none';
+      toast('📌 仅显示收藏院校');
+    } else {
+      filterSections.forEach(function(el) { el.style.display = ''; });
+      if (statsBar) statsBar.style.display = '';
+      renderHistory();
+      toast('📋 显示全部院校');
+    }
     renderSchools();
   }
 
