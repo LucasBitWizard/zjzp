@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>择校助手</title>
+<style>
+:root {
+  --bg: #f5f6f8;
+  --card: #fff;
+  --text: #1a1a2e;
+  --text2: #666;
+  --text3: #999;
+  --primary: #3366ff;
+  --gold: #f5a623;
+  --red: #e8456b;
+  --green: #2eaa5a;
+  --border: #eef0f4;
+  --shadow: 0 2px 12px rgba(0,0,0,0.05);
+  --radius: 14px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ========== 顶部导航 ========== */
+.header {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+  padding: 20px 24px;
+  color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+.header .logo {
+  font-size: 1.3rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header .logo .icon { font-size: 1.5rem; }
+.header-search {
+  display: flex;
+  gap: 10px;
+}
+.header-search input {
+  flex: 1;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 20px;
+  font-size: 15px;
+  outline: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  backdrop-filter: blur(10px);
+}
+.header-search input::placeholder { color: rgba(255,255,255,0.5); }
+.header-search input:focus { background: rgba(255,255,255,0.25); }
+
+/* ========== 主容器 ========== */
+.container { max-width: 1100px; margin: 0 auto; padding: 16px 20px; }
+
+/* ========== 筛选栏 ========== */
+.filter-section { margin-bottom: 14px; }
+.filter-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 7px 16px;
+  border-radius: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  background: #fff;
+  color: var(--text2);
+  transition: 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  white-space: nowrap;
+}
+.filter-chip:hover { color: var(--primary); background: #f0f4ff; }
+.filter-chip.active { background: var(--primary); color: #fff; box-shadow: 0 4px 12px rgba(51,102,255,0.25); }
+.filter-chip.country { font-size: 14px; padding: 9px 18px; }
+.filter-chip.country .flag { margin-right: 4px; }
+
+/* ========== 统计栏 ========== */
+.stats-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.stats-bar .count { font-size: 13px; color: var(--text3); }
+.stats-bar .sort-btn {
+  font-size: 13px;
+  color: var(--primary);
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-weight: 500;
+}
+
+/* ========== 院校卡片 ========== */
+.school-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+}
+.school-card {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.school-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+.school-card .rank-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f5a623, #e8941a);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.1;
+}
+.school-card .rank-badge .num { font-size: 16px; }
+.school-card .rank-badge.top50 { background: linear-gradient(135deg, #e8456b, #d63055); }
+.school-card .rank-badge.top10 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+.school-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+.school-info { flex: 1; min-width: 0; }
+.school-name { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+.school-ename { font-size: 11px; color: var(--text3); margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.school-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+.school-meta span {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.meta-country { background: #e8f0fe; color: #4a90e2; }
+.meta-type { background: #f3e8ff; color: #7c3aed; }
+.meta-fee { background: #fef3e8; color: #e8882e; }
+
+.school-programs {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.program-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #f5f6f8;
+  color: var(--text2);
+}
+.program-tag.hot { background: #fef2f2; color: var(--red); }
+
+.school-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.fav-btn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 20px;
+  transition: 0.2s;
+}
+.fav-btn.faved { color: var(--red); }
+.detail-link {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ========== 弹窗 ========== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.modal h2 { font-size: 1.2rem; margin-bottom: 6px; }
+.modal .en-name { font-size: 13px; color: var(--text3); margin-bottom: 16px; }
+.detail-section { margin-bottom: 18px; }
+.detail-section h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.detail-item {
+  background: var(--bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+.detail-item .label { font-size: 11px; color: var(--text3); }
+.detail-item .value { font-weight: 600; margin-top: 2px; }
+.program-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.program-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: #f0f4ff;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* ========== 收藏栏 ========== */
+.fav-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 10px 16px;
+  background: var(--card);
+  border-radius: 24px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text2);
+}
+.fav-bar .count { color: var(--red); font-weight: 700; }
+
+/* ========== Toast ========== */
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 20px;
+  font-size: 14px;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.toast.show { opacity: 1; }
+
+/* ========== 表单 ========== */
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.form-group input, .form-group select, .form-group textarea {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 12px;
+  font-size: 13px; outline: none; font-family: inherit; resize: vertical; background: #fafbfc;
+}
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); background: #fff; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+.btn-ghost-modal { border: none; background: transparent; padding: 10px 18px; border-radius: 18px; font-size: 14px; cursor: pointer; color: var(--text2); }
+
+/* ========== 底部导航（移动端） ========== */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid var(--border);
+  z-index: 150;
+  padding: 6px 0 env(safe-area-inset-bottom, 6px);
+}
+.bottom-nav .nav-row {
+  display: flex;
+  justify-content: space-around;
+}
+.bottom-nav .nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text3);
+  border: none;
+  background: none;
+  transition: 0.2s;
+}
+.bottom-nav .nav-item .icon { font-size: 20px; }
+.bottom-nav .nav-item.active { color: var(--primary); font-weight: 600; }
+.bottom-nav .nav-item .badge {
+  position: absolute;
+  top: 2px;
+  margin-left: 14px;
+  background: var(--red);
+  color: #fff;
+  font-size: 10px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ========== 历史记录 ========== */
+.history-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.history-row::-webkit-scrollbar { display: none; }
+.history-label {
+  font-size: 12px;
+  color: var(--text3);
+  white-space: nowrap;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.history-chip {
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+.history-chip:hover { color: var(--primary); border-color: var(--primary); }
+
+/* ========== 对比栏 ========== */
+.compare-bar {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 24px;
+  z-index: 149;
+  font-size: 13px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  cursor: pointer;
+  gap: 12px;
+  align-items: center;
+}
+.compare-bar.show { display: flex; }
+.compare-bar .count { color: var(--gold); font-weight: 700; }
+
+/* 对比复选框 */
+.compare-check {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--primary);
+  cursor: pointer;
+  display: none;
+}
+.compare-mode .compare-check { display: block; }
+.compare-mode .school-card { padding-left: 36px; }
+
+/* 编辑按钮修复位置 */
+.admin-actions {
+  position: absolute;
+  top: 8px;
+  right: 50px;
+  display: flex;
+  gap: 4px;
+  z-index: 3;
+}
+
+/* 对比弹窗表格 */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.compare-table th {
+  background: #f5f6f8;
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.compare-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.compare-table .school-header {
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  background: #fafbfd;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .school-grid { grid-template-columns: 1fr; }
+  .header { padding: 14px 16px; }
+  .header .logo { font-size: 1.1rem; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .filter-chip.country { font-size: 12px; padding: 7px 14px; }
+  .bottom-nav { display: block; }
+  .container { padding-bottom: 80px; }
+  .compare-bar { bottom: 90px; }
+  .history-row { margin-top: 8px; }
+}
+@media (max-width: 480px) {
+  .container { padding: 10px 10px 80px; }
+  .school-card { padding: 14px; gap: 10px; }
+  .school-logo { width: 42px; height: 42px; font-size: 18px; }
+  .school-name { font-size: 0.9rem; }
+  .compare-table { font-size: 11px; }
+  .compare-table th, .compare-table td { padding: 6px 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部 -->
+<header class="header">
+  <div class="header-top">
+    <div class="logo"><span class="icon">🎓</span>择校助手</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="btnAdmin" style="background:rgba(255,255,255,0.15);border:none;color:#fff;padding:8px 14px;border-radius:18px;font-size:13px;cursor:pointer;backdrop-filter:blur(10px)">🔑 管理</button>
+      <div class="fav-bar" id="favBar" onclick="showFavorites()">
+        ❤️ 收藏夹 <span class="count" id="favCount">0</span>
+      </div>
+    </div>
+  </div>
+  <div class="header-search">
+    <input type="text" id="searchInput" placeholder="🔍 搜索院校名称、专业、国家…" />
+  </div>
+</header>
+
+<div class="container">
+  <!-- 国家筛选 -->
+  <div class="filter-section">
+    <div class="filter-label">🌍 留学国家</div>
+    <div class="filter-row" id="countryFilters"></div>
+  </div>
+
+  <!-- 学历 -->
+  <div class="filter-section">
+    <div class="filter-label">🎯 学习阶段 / 考试培训</div>
+    <div class="filter-row" id="degreeFilters"></div>
+  </div>
+
+  <!-- 专业大类 -->
+  <div class="filter-section">
+    <div class="filter-label">📚 专业方向</div>
+    <div class="filter-row" id="majorFilters"></div>
+  </div>
+
+  <!-- QS排名 -->
+  <div class="filter-section">
+    <div class="filter-label">🏆 QS 排名</div>
+    <div class="filter-row" id="rankFilters"></div>
+  </div>
+
+  <!-- 历史记录 -->
+  <div class="history-row" id="historyRow" style="display:none">
+    <span class="history-label">🕐 最近浏览</span>
+  </div>
+
+  <!-- 统计排序 -->
+  <div class="stats-bar">
+    <span class="count" id="resultCount">共 0 所院校</span>
+    <div style="display:flex;gap:10px;align-items:center">
+      <button class="sort-btn" id="compareToggleBtn" onclick="toggleCompareMode()" style="font-size:13px;color:var(--primary);cursor:pointer;border:none;background:none;font-weight:500">🔀 对比模式</button>
+      <button class="sort-btn" id="sortBtn" onclick="toggleSort()">🔢 按排名排序</button>
+    </div>
+  </div>
+
+  <!-- 院校列表 -->
+  <div class="school-grid" id="schoolGrid"></div>
+
+  <!-- 空状态 -->
+  <div id="emptyState" style="display:none;text-align:center;padding:60px 20px;color:#ccc">
+    <div style="font-size:56px;margin-bottom:12px">🔍</div>
+    <p style="font-size:15px">未找到匹配的院校</p>
+  </div>
+</div>
+
+<!-- ========== 院校详情弹窗 ========== -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" id="detailContent"></div>
+</div>
+
+<!-- ========== 添加学校弹窗 ========== -->
+<div class="modal-overlay" id="addSchoolModal">
+  <div class="modal">
+    <h3 id="addTitle">➕ 添加院校</h3>
+    <input type="hidden" id="editSchoolId" />
+    <div class="form-group">
+      <label>院校名称 *</label>
+      <input type="text" id="sName" placeholder="如：哈佛大学" maxlength="50" />
+    </div>
+    <div class="form-group">
+      <label>英文名称</label>
+      <input type="text" id="sEname" placeholder="如：Harvard University" maxlength="80" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>国家</label>
+        <select id="sCountry">
+          <option value="美国">🇺🇸 美国</option><option value="英国">🇬🇧 英国</option><option value="澳大利亚">🇦🇺 澳大利亚</option>
+          <option value="加拿大">🇨🇦 加拿大</option><option value="新加坡">🇸🇬 新加坡</option><option value="日本">🇯🇵 日本</option>
+          <option value="德国">🇩🇪 德国</option><option value="法国">🇫🇷 法国</option><option value="韩国">🇰🇷 韩国</option>
+          <option value="中国香港">🇭🇰 中国香港</option><option value="中国">🇨🇳 中国</option><option value="瑞士">🇨🇭 瑞士</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>QS排名（0=不显示）</label>
+        <input type="number" id="sQs" value="0" min="0" max="9999" />
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>学校类型</label>
+        <input type="text" id="sType" placeholder="如：公立、私立" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>所在城市</label>
+        <input type="text" id="sCity" placeholder="如：美国波士顿" maxlength="30" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>学习阶段（多选用逗号隔开）</label>
+      <input type="text" id="sDegree" placeholder="如：本科,硕士,博士" maxlength="100" />
+    </div>
+    <div class="form-group">
+      <label>专业方向（多选用逗号隔开）</label>
+      <input type="text" id="sMajor" placeholder="如：商科,工科,理科" maxlength="100" />
+    </div>
+    <div class="form-group">
+      <label>热门专业（多选用逗号隔开）</label>
+      <input type="text" id="sPrograms" placeholder="如：计算机,金融,工程" maxlength="200" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>学费</label>
+        <input type="text" id="sFee" placeholder="如：$50,000/年" maxlength="30" />
+      </div>
+      <div class="form-group">
+        <label>申请截止</label>
+        <input type="text" id="sDeadline" placeholder="如：12月31日" maxlength="30" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label>学校简介</label>
+      <textarea id="sDesc" rows="2" placeholder="简单介绍学校特色…" maxlength="300"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost-modal" id="btnAddCancel">取消</button>
+      <button class="filter-chip active" style="font-size:14px;cursor:pointer" id="btnAddSave">💾 保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 浮动添加按钮（管理员可见） -->
+<button id="floatAddBtn" style="display:none;position:fixed;bottom:24px;right:24px;width:52px;height:52px;border-radius:50%;background:var(--primary);color:#fff;font-size:26px;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(51,102,255,0.35);z-index:150;transition:0.2s" title="添加学校">＋</button>
+
+<!-- ========== 对比弹窗 ========== -->
+<div class="modal-overlay" id="compareModal">
+  <div class="modal" style="max-width:800px">
+    <h3 style="margin-bottom:16px">🔀 院校对比</h3>
+    <div id="compareContent"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="filter-chip" style="font-size:14px;cursor:pointer" onclick="document.getElementById('compareModal').classList.remove('show')">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 对比栏 -->
+<div class="compare-bar" id="compareBar" onclick="showCompare()">
+  🔀 对比 <span class="count" id="compareCount">0</span> 所学校
+</div>
+
+<!-- 底部导航（移动端） -->
+<nav class="bottom-nav">
+  <div class="nav-row">
+    <button class="nav-item active" onclick="scrollToTop()"><span class="icon">🏠</span>首页</button>
+    <button class="nav-item" onclick="document.getElementById('searchInput').focus()"><span class="icon">🔍</span>搜索</button>
+    <button class="nav-item" id="bottomCompareBtn" onclick="toggleCompareMode()"><span class="icon" style="position:relative">🔀<span id="bottomCompareBadge" style="display:none;position:absolute;top:-4px;right:-10px;background:var(--red);color:#fff;font-size:9px;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center">0</span></span>对比</button>
+    <button class="nav-item" onclick="showFavorites()"><span class="icon">❤️</span>收藏</button>
+  </div>
+</nav>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  // ===================== 院校数据 =====================
+  const schools = [
+    {id:1,name:"麻省理工学院",ename:"Massachusetts Institute of Technology",country:"美国",countryFlag:"🇺🇸",qs:1,type:"私立",city:"马萨诸塞州剑桥市",degree:["硕士","博士","本科"],major:["工科","理科","商科"],programs:["计算机科学","电子工程","机械工程","金融","数据科学"],fee:"$55,000/年",deadline:"12月15日",desc:"世界顶尖的理工科大学，以工程学和计算机科学闻名全球。",color:"#8b1a2b"},
+    {id:2,name:"剑桥大学",ename:"University of Cambridge",country:"英国",countryFlag:"🇬🇧",qs:2,type:"公立",city:"英国剑桥",degree:["硕士","博士","本科"],major:["理科","文科","工科","商科"],programs:["经济学","数学","法律","工程","自然科学"],fee:"£25,000/年",deadline:"10月15日",desc:"英语世界第二古老的大学，拥有800多年历史。",color:"#106aa7"},
+    {id:3,name:"牛津大学",ename:"University of Oxford",country:"英国",countryFlag:"🇬🇧",qs:3,type:"公立",city:"英国牛津",degree:["硕士","博士","本科"],major:["文科","理科","医学","法学"],programs:["哲学政治经济","法律","医学","文学","历史"],fee:"£27,000/年",deadline:"10月15日",desc:"英语世界最古老的大学，培养了众多世界领袖。",color:"#002147"},
+    {id:4,name:"哈佛大学",ename:"Harvard University",country:"美国",countryFlag:"🇺🇸",qs:4,type:"私立",city:"马萨诸塞州剑桥市",degree:["硕士","博士","本科"],major:["商科","法学","医学","文科"],programs:["MBA","法学","医学","公共政策","教育"],fee:"$54,000/年",deadline:"1月1日",desc:"美国历史最悠久的高等学府，常春藤盟校成员。",color:"#a51d2d"},
+    {id:5,name:"斯坦福大学",ename:"Stanford University",country:"美国",countryFlag:"🇺🇸",qs:5,type:"私立",city:"加利福尼亚州斯坦福",degree:["硕士","博士","本科"],major:["工科","商科","理科"],programs:["计算机科学","创业管理","工程","设计"],fee:"$56,000/年",deadline:"1月2日",desc:"位于硅谷核心，培养了众多科技企业家。",color:"#8c1515"},
+    {id:6,name:"苏黎世联邦理工",ename:"ETH Zurich",country:"瑞士",countryFlag:"🇨🇭",qs:6,type:"公立",city:"瑞士苏黎世",degree:["硕士","博士","本科"],major:["工科","理科"],programs:["计算机科学","物理学","机械工程","数学"],fee:"CHF 1,500/年",deadline:"4月30日",desc:"欧洲顶尖理工科大学，爱因斯坦的母校。",color:"#215c9c"},
+    {id:7,name:"新加坡国立大学",ename:"National University of Singapore",country:"新加坡",countryFlag:"🇸🇬",qs:8,type:"公立",city:"新加坡",degree:["硕士","博士","本科"],major:["工科","商科","理科","文科"],programs:["计算机科学","商业分析","工程","法学"],fee:"S$18,000/年",deadline:"2月28日",desc:"亚洲排名第一的综合性大学。",color:"#ed6b00"},
+    {id:8,name:"伦敦大学学院",ename:"UCL",country:"英国",countryFlag:"🇬🇧",qs:9,type:"公立",city:"英国伦敦",degree:["硕士","博士","本科"],major:["文科","理科","工科","医学"],programs:["建筑","教育","考古","医学","计算机"],fee:"£24,000/年",deadline:"1月29日",desc:"伦敦第一所大学，以包容性和创新精神著称。",color:"#572a7a"},
+    {id:9,name:"加州大学伯克利",ename:"UC Berkeley",country:"美国",countryFlag:"🇺🇸",qs:10,type:"公立",city:"加利福尼亚州伯克利",degree:["硕士","博士","本科"],major:["工科","理科","文科"],programs:["计算机科学","经济学","工程","化学"],fee:"$44,000/年",deadline:"12月1日",desc:"世界顶级公立研究型大学。",color:"#003262"},
+    {id:10,name:"帝国理工学院",ename:"Imperial College London",country:"英国",countryFlag:"🇬🇧",qs:6,type:"公立",city:"英国伦敦",degree:["硕士","博士","本科"],major:["工科","理科","医学","商科"],programs:["工程","计算机","金融","医学"],fee:"£32,000/年",deadline:"1月15日",desc:"专注于科学、工程、医学和商学的世界顶尖大学。",color:"#003e74"},
+    {id:11,name:"墨尔本大学",ename:"University of Melbourne",country:"澳大利亚",countryFlag:"🇦🇺",qs:14,type:"公立",city:"澳大利亚墨尔本",degree:["硕士","博士","本科"],major:["文科","商科","理科","医学"],programs:["教育","法律","商科","医学","工程"],fee:"A$38,000/年",deadline:"10月31日",desc:"澳大利亚最古老和最负盛名的大学之一。",color:"#0b2a4a"},
+    {id:12,name:"多伦多大学",ename:"University of Toronto",country:"加拿大",countryFlag:"🇨🇦",qs:21,type:"公立",city:"加拿大多伦多",degree:["硕士","博士","本科"],major:["文科","理科","工科","医学"],programs:["计算机科学","工程","生命科学","商科"],fee:"C$40,000/年",deadline:"1月15日",desc:"加拿大排名第一的顶尖研究型大学。",color:"#00204e"},
+    {id:13,name:"东京大学",ename:"The University of Tokyo",country:"日本",countryFlag:"🇯🇵",qs:28,type:"国立",city:"日本东京",degree:["硕士","博士","本科"],major:["理科","工科","文科","医学"],programs:["工程","理学","经济学","法学"],fee:"¥535,800/年",deadline:"12月1日",desc:"日本最高学府，亚洲顶尖研究型大学。",color:"#8b0021"},
+    {id:14,name:"香港大学",ename:"The University of Hong Kong",country:"中国香港",countryFlag:"🇭🇰",qs:26,type:"公立",city:"中国香港",degree:["硕士","博士","本科"],major:["商科","法学","医学","文科"],programs:["金融","法律","医学","建筑","教育"],fee:"HK$171,000/年",deadline:"12月31日",desc:"亚洲顶尖的国际化综合研究型大学。",color:"#006747"},
+    {id:15,name:"悉尼大学",ename:"University of Sydney",country:"澳大利亚",countryFlag:"🇦🇺",qs:19,type:"公立",city:"澳大利亚悉尼",degree:["硕士","博士","本科"],major:["文科","商科","理科","医学"],programs:["商科","法律","工程","医学","教育"],fee:"A$42,000/年",deadline:"1月31日",desc:"澳大利亚历史最悠久的大学。",color:"#e5462c"},
+    {id:16,name:"慕尼黑工业大学",ename:"Technical University of Munich",country:"德国",countryFlag:"🇩🇪",qs:37,type:"公立",city:"德国慕尼黑",degree:["硕士","博士","本科"],major:["工科","理科"],programs:["机械工程","计算机科学","电气工程","物理"],fee:"免学费",deadline:"7月15日",desc:"德国顶尖理工科大学，欧洲工业创新的摇篮。",color:"#0065bd"},
+    {id:17,name:"新南威尔士大学",ename:"UNSW Sydney",country:"澳大利亚",countryFlag:"🇦🇺",qs:19,type:"公立",city:"澳大利亚悉尼",degree:["硕士","博士","本科"],major:["工科","商科","理科"],programs:["工程","商科","计算机","太阳能研究"],fee:"A$40,000/年",deadline:"11月30日",desc:"澳大利亚八大名校之一，工程和商科实力强劲。",color:"#ffd046"},
+    {id:18,name:"北京大学",ename:"Peking University",country:"中国",countryFlag:"🇨🇳",qs:17,type:"公立",city:"中国北京",degree:["硕士","博士","本科"],major:["文科","理科","法学","医学","商科"],programs:["经济学","法学","医学","计算机","文学"],fee:"¥30,000/年",deadline:"12月10日",desc:"中国顶尖综合性研究型大学。",color:"#94070a"},
+    {id:19,name:"清华大学",ename:"Tsinghua University",country:"中国",countryFlag:"🇨🇳",qs:25,type:"公立",city:"中国北京",degree:["硕士","博士","本科"],major:["工科","理科","商科"],programs:["计算机","电子","机械","经管","建筑"],fee:"¥30,000/年",deadline:"12月10日",desc:"中国最顶尖的理工科大学。",color:"#660874"},
+    {id:20,name:"首尔国立大学",ename:"Seoul National University",country:"韩国",countryFlag:"🇰🇷",qs:41,type:"国立",city:"韩国首尔",degree:["硕士","博士","本科"],major:["工科","理科","文科","医学"],programs:["工程","商科","医学","法学"],fee:"₩6,000,000/年",deadline:"3月31日",desc:"韩国最高学府，SKY之首。",color:"#0b4174"},
+    {id:21,name:"哥伦比亚大学",ename:"Columbia University",country:"美国",countryFlag:"🇺🇸",qs:23,type:"私立",city:"纽约州纽约市",degree:["硕士","博士","本科"],major:["文科","商科","法学","医学"],programs:["新闻","MBA","法学","国际关系"],fee:"$62,000/年",deadline:"1月1日",desc:"常春藤盟校，位于纽约市核心地带。",color:"#012169"},
+    {id:22,name:"麦吉尔大学",ename:"McGill University",country:"加拿大",countryFlag:"🇨🇦",qs:30,type:"公立",city:"加拿大蒙特利尔",degree:["硕士","博士","本科"],major:["文科","理科","医学","工科"],programs:["医学","法学","工程","文科"],fee:"C$30,000/年",deadline:"1月15日",desc:"加拿大最古老的大学，有北方哈佛之称。",color:"#ed1b2d"},
+    {id:23,name:"南洋理工大学",ename:"Nanyang Technological University",country:"新加坡",countryFlag:"🇸🇬",qs:26,type:"公立",city:"新加坡",degree:["硕士","博士","本科"],major:["工科","商科","理科"],programs:["计算机","电子工程","商科","材料科学"],fee:"S$17,000/年",deadline:"3月15日",desc:"亚洲顶尖的理工科大学，校园环境优美。",color:"#b7112e"},
+    {id:24,name:"巴黎文理研究大学",ename:"Université PSL",country:"法国",countryFlag:"🇫🇷",qs:44,type:"公立",city:"法国巴黎",degree:["硕士","博士","本科"],major:["文科","理科","工科","商科"],programs:["数学","物理","经济学","管理"],fee:"€3,770/年",deadline:"5月15日",desc:"法国顶尖研究型大学联盟。",color:"#003278"},
+    {id:25,name:"爱丁堡大学",ename:"University of Edinburgh",country:"英国",countryFlag:"🇬🇧",qs:22,type:"公立",city:"英国爱丁堡",degree:["硕士","博士","本科"],major:["文科","理科","医学","工科"],programs:["人工智能","医学","文学","生物科学"],fee:"£24,000/年",deadline:"1月25日",desc:"苏格兰最高学府，英语世界第六古老的大学。",color:"#041e42"},
+    // 小学/初中/高中留学
+    {id:26,name:"英国伊顿公学",ename:"Eton College",country:"英国",countryFlag:"🇬🇧",qs:0,type:"私立寄宿",city:"英国温莎",degree:["高中"],major:["文科","理科"],programs:["A-Level课程","GCSE课程","牛剑预备"],fee:"£44,000/年",deadline:"滚动招生",desc:"英国最负盛名的男子寄宿学校，培养了20位英国首相。",color:"#1a3a5c"},
+    {id:27,name:"瑞士莱蒙尼亚学院",ename:"Léman International School",country:"瑞士",countryFlag:"🇨🇭",qs:0,type:"私立国际",city:"瑞士日内瓦",degree:["小学","初中","高中"],major:["文科","理科","艺术"],programs:["IB课程","AP课程","IGCSE","法语"],fee:"CHF 85,000/年",deadline:"滚动招生",desc:"瑞士顶级国际学校，提供多语言沉浸式教育。",color:"#2e7d32"},
+    {id:28,name:"美国菲利普斯学院",ename:"Phillips Academy Andover",country:"美国",countryFlag:"🇺🇸",qs:0,type:"私立寄宿",city:"马萨诸塞州安多弗",degree:["高中"],major:["文科","理科","艺术"],programs:["AP课程","荣誉课程","STEM"],fee:"$62,000/年",deadline:"1月15日",desc:"美国排名第一的私立高中，常春藤大学录取率极高。",color:"#003865"},
+    {id:29,name:"新加坡美国学校",ename:"Singapore American School",country:"新加坡",countryFlag:"🇸🇬",qs:0,type:"私立国际",city:"新加坡",degree:["小学","初中","高中"],major:["文科","理科","艺术"],programs:["AP课程","IB课程","双语教学"],fee:"S$45,000/年",deadline:"滚动招生",desc:"亚洲顶尖国际学校，提供美式K-12教育体系。",color:"#c41230"},
+    {id:30,name:"澳洲基隆文法学校",ename:"Geelong Grammar School",country:"澳大利亚",countryFlag:"🇦🇺",qs:0,type:"私立寄宿",city:"澳大利亚基隆",degree:["小学","初中","高中"],major:["文科","理科"],programs:["VCE课程","IB课程","户外教育"],fee:"A$52,000/年",deadline:"滚动招生",desc:"澳大利亚最古老和最精英的私立学校之一。",color:"#1b3d6b"},
+    // 专升本
+    {id:31,name:"英国考文垂大学",ename:"Coventry University",country:"英国",countryFlag:"🇬🇧",qs:571,type:"公立",city:"英国考文垂",degree:["专升本","本科","硕士"],major:["商科","工科","理科"],programs:["Top-Up课程","国际商务","计算机","工程管理"],fee:"£16,000/年",deadline:"7月31日",desc:"英国专升本最受欢迎的大学之一，一年制Top-Up专升硕。",color:"#005596"},
+    {id:32,name:"英国伯明翰城市大学",ename:"Birmingham City University",country:"英国",countryFlag:"🇬🇧",qs:1001,type:"公立",city:"英国伯明翰",degree:["专升本","本科","硕士"],major:["商科","艺术","工科"],programs:["Top-Up课程","会计金融","设计","传媒"],fee:"£14,500/年",deadline:"7月31日",desc:"专升本热门选择，提供多种Top-Up学位衔接课程。",color:"#6b2f84"},
+    {id:33,name:"韩国又松大学",ename:"Woosong University",country:"韩国",countryFlag:"🇰🇷",qs:0,type:"私立",city:"韩国大田",degree:["专升本","本科","硕士"],major:["商科","工科"],programs:["3+1专升本","酒店管理","IT","设计"],fee:"₩8,000,000/年",deadline:"6月30日",desc:"韩国专升本热门院校，3+1项目专为中国专科生设计。",color:"#d4213d"},
+    // 雅思培训
+    {id:34,name:"新东方留学考试",ename:"New Oriental Test Prep",country:"中国",countryFlag:"🇨🇳",qs:0,type:"培训机构",city:"全国覆盖",degree:["雅思","托福"],major:["文科"],programs:["雅思全科","雅思冲刺","雅思模考","一对一辅导"],fee:"¥8,000起",deadline:"随时报名",desc:"中国最大的留学考试培训机构，雅思培训行业标杆。",color:"#e8452d"},
+    {id:35,name:"环球雅思",ename:"Global IELTS",country:"中国",countryFlag:"🇨🇳",qs:0,type:"培训机构",city:"全国覆盖",degree:["雅思"],major:["文科"],programs:["雅思基础","雅思强化","雅思7分班","封闭集训"],fee:"¥6,000起",deadline:"随时报名",desc:"专注于雅思培训的知名品牌，小班教学效果好。",color:"#0077c8"},
+    {id:36,name:"新航道",ename:"New Channel",country:"中国",countryFlag:"🇨🇳",qs:0,type:"培训机构",city:"全国覆盖",degree:["雅思","托福"],major:["文科"],programs:["雅思全科","托福全科","口语专项","写作专项"],fee:"¥7,000起",deadline:"随时报名",desc:"雅思托福培训知名品牌，胡敏老师创办。",color:"#f68b1f"},
+    {id:37,name:"British Council雅思官方",ename:"British Council IELTS",country:"英国",countryFlag:"🇬🇧",qs:0,type:"官方考试",city:"全球",degree:["雅思"],major:["文科"],programs:["雅思学术类","雅思培训类","UKVI雅思","雅思机考"],fee:"¥2,170/次",deadline:"考前2周",desc:"雅思考试官方机构，全球认可度最高的英语考试之一。",color:"#003a70"},
+    // 托福培训
+    {id:38,name:"ETS托福官方",ename:"ETS TOEFL Official",country:"美国",countryFlag:"🇺🇸",qs:0,type:"官方考试",city:"全球",degree:["托福"],major:["文科"],programs:["托福iBT","托福家考","托福Essentials"],fee:"$215/次",deadline:"考前7天",desc:"托福考试官方机构ETS，美国留学首选语言考试。",color:"#00539b"},
+    {id:39,name:"小站教育",ename:"Zhan.com",country:"中国",countryFlag:"🇨🇳",qs:0,type:"在线培训",city:"全国覆盖",degree:["雅思","托福"],major:["文科"],programs:["雅思在线","托福在线","1对1定制","AI模考"],fee:"¥3,000起",deadline:"随时报名",desc:"知名在线出国考试培训机构，AI+名师双驱动。",color:"#00a870"},
+    {id:40,name:"朗阁教育",ename:"Longre Education",country:"中国",countryFlag:"🇨🇳",qs:0,type:"培训机构",city:"全国覆盖",degree:["雅思","托福"],major:["文科"],programs:["雅思精品","托福精品","SAT","GRE","GMAT"],fee:"¥5,000起",deadline:"随时报名",desc:"老牌留学考试培训机构，20年教学经验。",color:"#1e3a5f"}
+  ];
+
+  // 筛选器选项
+  const countries = ["全部","美国","英国","澳大利亚","加拿大","新加坡","日本","德国","法国","韩国","中国香港","中国","瑞士"];
+  const degrees = ["全部","小学","初中","高中","大学","专升本","硕士","博士","雅思","托福"];
+  const majors = ["全部","商科","工科","理科","文科","医学","法学","艺术","教育"];
+  const ranks = [{label:"全部",min:0,max:9999},{label:"QS前10",min:1,max:10},{label:"QS前50",min:1,max:50},{label:"QS 50-100",min:50,max:100},{label:"QS 100+",min:100,max:9999}];
+
+  let activeCountry = "全部";
+  let activeDegree = "全部";
+  let activeMajor = "全部";
+  let activeRank = ranks[0];
+  let sortByRank = true;
+  let showFavOnly = false;
+
+  const $ = s => document.querySelector(s);
+  const toastEl = $('#toast');
+  let toastTimer = null;
+
+  function toast(msg) {
+    if (toastTimer) clearTimeout(toastTimer);
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2000);
+  }
+
+  // ===================== 收藏 =====================
+  function getFavorites() {
+    try { return JSON.parse(localStorage.getItem('school_favs')) || []; }
+    catch(_) { return []; }
+  }
+  function saveFavorites(favs) { localStorage.setItem('school_favs', JSON.stringify(favs)); }
+  function toggleFav(e, id) {
+    e.stopPropagation();
+    let favs = getFavorites();
+    const idx = favs.indexOf(id);
+    if (idx === -1) { favs.push(id); toast('❤️ 已收藏'); }
+    else { favs.splice(idx, 1); toast('已取消收藏'); }
+    saveFavorites(favs);
+    renderSchools();
+    updateFavBar();
+  }
+
+  function updateFavBar() {
+    const favs = getFavorites();
+    $('#favCount').textContent = favs.length;
+  }
+
+  function showFavorites() {
+    showFavOnly = !showFavOnly;
+    if (showFavOnly) toast('📌 仅显示收藏院校');
+    else toast('📋 显示全部院校');
+    document.getElementById('favBar').style.background = showFavOnly ? '#fef2f2' : '#fff';
+    renderSchools();
+  }
+
+  // ===================== 渲染筛选器 =====================
+  function renderFilters() {
+    $('#countryFilters').innerHTML = countries.map(c =>
+      '<button class="filter-chip country' + (activeCountry===c?' active':'') + '" data-country="' + c + '">' + c + '</button>'
+    ).join('');
+    $('#degreeFilters').innerHTML = degrees.map(d =>
+      '<button class="filter-chip' + (activeDegree===d?' active':'') + '" data-degree="' + d + '">' + d + '</button>'
+    ).join('');
+    $('#majorFilters').innerHTML = majors.map(m =>
+      '<button class="filter-chip' + (activeMajor===m?' active':'') + '" data-major="' + m + '">' + m + '</button>'
+    ).join('');
+    $('#rankFilters').innerHTML = ranks.map((r,i) =>
+      '<button class="filter-chip' + (activeRank===r?' active':'') + '" data-rank="' + i + '">' + r.label + '</button>'
+    ).join('');
+
+    // 事件绑定
+    document.querySelectorAll('[data-country]').forEach(b =>
+      b.addEventListener('click', () => { activeCountry = b.dataset.country; renderFilters(); renderSchools(); }));
+    document.querySelectorAll('[data-degree]').forEach(b =>
+      b.addEventListener('click', () => { activeDegree = b.dataset.degree; renderFilters(); renderSchools(); }));
+    document.querySelectorAll('[data-major]').forEach(b =>
+      b.addEventListener('click', () => { activeMajor = b.dataset.major; renderFilters(); renderSchools(); }));
+    document.querySelectorAll('[data-rank]').forEach(b =>
+      b.addEventListener('click', () => { activeRank = ranks[parseInt(b.dataset.rank)]; renderFilters(); renderSchools(); }));
+  }
+
+  // ===================== 渲染院校列表 =====================
+  function renderSchools() {
+    const keyword = ($('#searchInput').value || '').toLowerCase().trim();
+    const favs = getFavorites();
+
+    let filtered = schools.filter(s => {
+      if (showFavOnly && !favs.includes(s.id)) return false;
+      if (activeCountry !== '全部' && s.country !== activeCountry) return false;
+      if (activeDegree !== '全部' && !s.degree.includes(activeDegree)) return false;
+      if (activeMajor !== '全部' && !s.major.includes(activeMajor)) return false;
+      if (s.qs < activeRank.min || s.qs > activeRank.max) return false;
+      if (keyword) {
+        return s.name.includes(keyword) || s.ename.toLowerCase().includes(keyword) ||
+               s.country.includes(keyword) || s.programs.some(p => p.includes(keyword)) ||
+               s.major.some(m => m.includes(keyword));
+      }
+      return true;
+    });
+
+    if (sortByRank) filtered.sort((a,b) => a.qs - b.qs);
+
+    $('#resultCount').textContent = '共 ' + filtered.length + ' 所院校';
+
+    if (filtered.length === 0) {
+      $('#schoolGrid').innerHTML = '';
+      $('#emptyState').style.display = 'block';
+      return;
+    }
+    $('#emptyState').style.display = 'none';
+
+    $('#schoolGrid').innerHTML = filtered.map(s => {
+      const isFav = favs.includes(s.id);
+      const rankClass = s.qs <= 10 ? 'top10' : s.qs <= 50 ? 'top50' : '';
+      return '<div class="school-card" onclick="openDetail(' + s.id + ')">'
+        + (s.qs <= 50 ? '<div class="rank-badge ' + rankClass + '"><span class="num">' + s.qs + '</span>QS</div>' : '')
+        + '<div class="school-logo" style="background:' + s.color + '">' + s.name[0] + '</div>'
+        + '<div class="school-info">'
+        +   '<div class="school-name">' + s.name + '</div>'
+        +   '<div class="school-ename">' + s.ename + '</div>'
+        +   '<div class="school-meta">'
+        +     '<span class="meta-country">' + s.countryFlag + ' ' + s.country + '</span>'
+        +     '<span class="meta-type">' + s.type + '</span>'
+        +     '<span class="meta-fee">' + s.fee.split('/')[0] + '</span>'
+        +   '</div>'
+        +   '<div class="school-programs">'
+        +     s.programs.slice(0,4).map((p,i) => '<span class="program-tag' + (i===0?' hot':'') + '">' + p + '</span>').join('')
+        +   '</div>'
+        +   '<div class="school-actions">'
+        +     '<button class="fav-btn' + (isFav?' faved':'') + '" onclick="toggleFav(event,' + s.id + ')">' + (isFav?'❤️':'🤍') + '</button>'
+        +     '<span class="detail-link">查看详情 →</span>'
+        +   '</div>'
+        + '</div></div>';
+    }).join('');
+  }
+
+  // ===================== 详情弹窗 =====================
+  window.openDetail = function(id) {
+    addHistory(id);
+    const s = schools.find(x => x.id === id);
+    if (!s) return;
+    const favs = getFavorites();
+    const isFav = favs.includes(id);
+
+    $('#detailContent').innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">'
+      + '<div class="school-logo" style="background:' + s.color + ';width:56px;height:56px;font-size:26px">' + s.name[0] + '</div>'
+      + '<div>'
+      +   '<h2>' + s.name + ' <span style="font-size:14px;color:var(--gold)">QS#' + s.qs + '</span></h2>'
+      +   '<div class="en-name">' + s.ename + '</div>'
+      + '</div></div>'
+
+      + '<div class="detail-section"><h4>📋 基本信息</h4>'
+      + '<div class="detail-grid">'
+      + '<div class="detail-item"><div class="label">国家</div><div class="value">' + s.countryFlag + ' ' + s.country + '</div></div>'
+      + '<div class="detail-item"><div class="label">学校类型</div><div class="value">' + s.type + '</div></div>'
+      + '<div class="detail-item"><div class="label">所在城市</div><div class="value">' + s.city + '</div></div>'
+      + '<div class="detail-item"><div class="label">QS世界排名</div><div class="value">第 ' + s.qs + ' 名</div></div>'
+      + '<div class="detail-item"><div class="label">学费</div><div class="value">' + s.fee + '</div></div>'
+      + '<div class="detail-item"><div class="label">申请截止</div><div class="value">' + s.deadline + '</div></div>'
+      + '</div></div>'
+
+      + '<div class="detail-section"><h4>📖 学校简介</h4><p style="font-size:14px;color:var(--text2);line-height:1.8">' + s.desc + '</p></div>'
+
+      + '<div class="detail-section"><h4>🎯 热门专业</h4><div class="program-list">'
+      + s.programs.map(p => '<span class="program-pill">' + p + '</span>').join('')
+      + '</div></div>'
+
+      + '<div class="detail-section"><h4>📚 专业方向</h4><div class="program-list">'
+      + s.major.map(m => '<span class="program-pill" style="background:#fef3e8;color:#e8882e">' + m + '</span>').join('')
+      + '</div></div>'
+
+      + '<div style="display:flex;gap:10px;margin-top:20px">'
+      + '<button class="filter-chip active" style="flex:1;padding:12px;font-size:14px;cursor:pointer" onclick="toggleFavFromDetail(' + id + ')">'
+      + (isFav ? '❤️ 取消收藏' : '🤍 加入收藏')
+      + '</button>'
+      + '<button class="filter-chip" style="flex:1;padding:12px;font-size:14px;cursor:pointer" onclick="document.getElementById(\'detailModal\').classList.remove(\'show\')">关闭</button>'
+      + '</div>';
+
+    $('#detailModal').classList.add('show');
+  };
+
+  window.toggleFavFromDetail = function(id) {
+    let favs = getFavorites();
+    const idx = favs.indexOf(id);
+    if (idx === -1) { favs.push(id); toast('❤️ 已收藏'); }
+    else { favs.splice(idx, 1); toast('已取消收藏'); }
+    saveFavorites(favs);
+    renderSchools();
+    updateFavBar();
+    window.openDetail(id);
+  };
+
+  // 全局暴露
+  window.toggleFav = toggleFav;
+  window.showFavorites = showFavorites;
+
+  // 关闭弹窗
+  $('#detailModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') $('#detailModal').classList.remove('show');
+  });
+
+  // 排序
+  window.toggleSort = function() {
+    sortByRank = !sortByRank;
+    $('#sortBtn').textContent = sortByRank ? '🔢 按排名排序' : '📋 默认排序';
+    renderSchools();
+  };
+
+  // 搜索
+  $('#searchInput').addEventListener('input', renderSchools);
+
+  // ===================== 管理功能 =====================
+  const ADMIN_PWD_KEY = 'school_app_admin_pwd';
+  const CUSTOM_SCHOOLS_KEY = 'school_app_custom';
+  const DEFAULT_ADMIN_PWD = 'admin888';
+  let isAdmin = false;
+  let customSchools = [];
+  let compareIds = [];
+  let compareMode = false;
+  let historyList = [];
+
+  function getAdminPwd() { return localStorage.getItem(ADMIN_PWD_KEY) || DEFAULT_ADMIN_PWD; }
+
+  function loadCustomSchools() {
+    try { customSchools = JSON.parse(localStorage.getItem(CUSTOM_SCHOOLS_KEY)) || []; }
+    catch(_) { customSchools = []; }
+  }
+  function saveCustomSchools() {
+    localStorage.setItem(CUSTOM_SCHOOLS_KEY, JSON.stringify(customSchools));
+  }
+
+  // 合并所有院校
+  function getAllSchools() {
+    var hidden = getHiddenSchools();
+    return schools.filter(function(s) { return hidden.indexOf(s.id) === -1; }).concat(customSchools);
+  }
+
+  // ===================== 历史记录 =====================
+  function loadHistory() {
+    try { historyList = JSON.parse(localStorage.getItem('school_history')) || []; }
+    catch(_) { historyList = []; }
+  }
+  function saveHistory() { localStorage.setItem('school_history', JSON.stringify(historyList.slice(0, 20))); }
+  function addHistory(id) {
+    historyList = historyList.filter(function(x) { return x !== id; });
+    historyList.unshift(id);
+    if (historyList.length > 20) historyList.pop();
+    saveHistory();
+    renderHistory();
+  }
+  function renderHistory() {
+    var row = document.getElementById('historyRow');
+    if (!row || historyList.length === 0) { if(row) row.style.display = 'none'; return; }
+    row.style.display = 'flex';
+    var allSchools = getAllSchools();
+    var chips = '';
+    historyList.forEach(function(id) {
+      var s = allSchools.find(function(x) { return x.id == id; });
+      if (s) chips += '<span class="history-chip" onclick="openDetail(' + id + ')">' + s.name + '</span>';
+    });
+    row.innerHTML = '<span class="history-label">🕐 最近浏览</span>' + chips;
+  }
+
+  // ===================== 对比模式 =====================
+  window.toggleCompareMode = function() {
+    compareMode = !compareMode;
+    compareIds = [];
+    updateCompareUI();
+    renderSchools();
+    if (compareMode) toast('🔀 对比模式已开启，勾选学校后点底部栏对比');
+    else toast('已退出对比模式');
+  };
+
+  function updateCompareUI() {
+    var bar = document.getElementById('compareBar');
+    var badge = document.getElementById('bottomCompareBadge');
+    var count = compareIds.length;
+
+    if (compareMode && count >= 2) {
+      bar.classList.add('show');
+    } else {
+      bar.classList.remove('show');
+    }
+    document.getElementById('compareCount').textContent = count;
+    if (badge) {
+      badge.textContent = count;
+      badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+    var grid = document.getElementById('schoolGrid');
+    if (compareMode) {
+      grid.classList.add('compare-mode');
+    } else {
+      grid.classList.remove('compare-mode');
+    }
+  }
+
+  window.toggleCompareCheck = function(e, id) {
+    e.stopPropagation();
+    var idx = compareIds.indexOf(id);
+    if (idx === -1) {
+      if (compareIds.length >= 3) { toast('⚠️ 最多对比3所学校'); return; }
+      compareIds.push(id);
+    } else {
+      compareIds.splice(idx, 1);
+    }
+    updateCompareUI();
+    renderSchools();
+  };
+
+  window.showCompare = function() {
+    if (compareIds.length < 2) { toast('⚠️ 至少选择2所学校'); return; }
+    var allSchools = getAllSchools();
+    var selected = compareIds.map(function(id) { return allSchools.find(function(s) { return s.id == id; }); }).filter(Boolean);
+
+    var rows = [
+      { label: '院校名称', key: 'name' },
+      { label: '英文名', key: 'ename' },
+      { label: '国家', key: 'country' },
+      { label: 'QS排名', key: 'qs', format: function(v) { return v > 0 ? '第' + v + '名' : '-'; } },
+      { label: '学校类型', key: 'type' },
+      { label: '所在城市', key: 'city' },
+      { label: '学费', key: 'fee' },
+      { label: '申请截止', key: 'deadline' }
+    ];
+
+    var html = '<table class="compare-table"><thead><tr><th>对比项</th>';
+    selected.forEach(function(s) {
+      html += '<th class="school-header"><div>' + s.name + '</div></th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    rows.forEach(function(row) {
+      html += '<tr><th>' + row.label + '</th>';
+      selected.forEach(function(s) {
+        var val = row.format ? row.format(s[row.key]) : (s[row.key] || '');
+        html += '<td>' + val + '</td>';
+      });
+      html += '</tr>';
+    });
+
+    // Programs row
+    html += '<tr><th>热门课程</th>';
+    selected.forEach(function(s) {
+      html += '<td>' + (s.programs||[]).slice(0,4).map(function(p){return '<span class="program-tag" style="margin:2px">'+p+'</span>'}).join('') + '</td>';
+    });
+    html += '</tr>';
+
+    html += '</tbody></table>';
+    document.getElementById('compareContent').innerHTML = html;
+    document.getElementById('compareModal').classList.add('show');
+  };
+
+  // 关闭对比弹窗
+  document.getElementById('compareModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  // ===================== 数据备份 =====================
+  window.exportBackup = function() {
+    var data = { customSchools: customSchools, hidden: getHiddenSchools(), history: historyList, exportDate: new Date().toISOString() };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '择校助手数据备份_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('📤 数据已导出');
+  };
+
+  window.importBackup = function() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function() {
+        try {
+          var data = JSON.parse(reader.result);
+          if (!confirm('即将导入：\n- ' + (data.customSchools||[]).length + ' 所自建学校\n确定导入？会覆盖当前数据。')) return;
+          if (data.customSchools) { customSchools = data.customSchools; saveCustomSchools(); }
+          if (data.hidden) { localStorage.setItem('school_hidden', JSON.stringify(data.hidden)); }
+          if (data.history) { historyList = data.history; saveHistory(); renderHistory(); }
+          renderSchools();
+          toast('✅ 数据已导入');
+        } catch(_) { toast('❌ 文件格式错误'); }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  // ===================== 移动端 =====================
+  window.scrollToTop = function() { window.scrollTo({ top: 0, behavior: 'smooth' }); };
+
+  // 管理员登录/退出
+  $('#btnAdmin').addEventListener('click', function() {
+    if (isAdmin) {
+      // 再次点击直接退出
+      isAdmin = false;
+      $('#btnAdmin').textContent = '🔑 管理';
+      $('#floatAddBtn').style.display = 'none';
+      renderSchools();
+      toast('已退出管理');
+      return;
+    }
+    var pwd = prompt('请输入管理员密码：');
+    if (pwd === getAdminPwd()) {
+      isAdmin = true;
+      $('#btnAdmin').textContent = '✅ 管理中（再点退出）';
+      $('#floatAddBtn').style.display = 'flex';
+      renderSchools();
+      toast('✅ 已登录管理');
+    } else if (pwd !== null) {
+      toast('❌ 密码错误');
+    }
+  });
+
+  // 右键管理按钮显示高级菜单
+  $('#btnAdmin').addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+    if (!isAdmin) return;
+    var hiddenCount = getHiddenSchools().length;
+    var action = prompt('高级管理：\n1. 修改密码（输入"改密码"）\n2. 恢复隐藏学校（输入"恢复"）' + (hiddenCount > 0 ? ' [' + hiddenCount + '所]' : '') + '\n3. 导出数据备份（输入"导出"）\n4. 导入数据备份（输入"导入"）\n5. 取消');
+    if (action === '改密码') {
+      var oldPwd = prompt('当前密码：');
+      if (oldPwd !== getAdminPwd()) { toast('❌ 密码错误'); return; }
+      var newPwd = prompt('新密码（至少4位）：');
+      if (!newPwd || newPwd.length < 4) { toast('❌ 至少4位'); return; }
+      localStorage.setItem(ADMIN_PWD_KEY, newPwd);
+      toast('✅ 密码已修改');
+    } else if (action === '恢复') {
+      localStorage.removeItem('school_hidden');
+      renderSchools();
+      toast('✅ 已恢复所有隐藏学校');
+    } else if (action === '导出') {
+      exportBackup();
+    } else if (action === '导入') {
+      importBackup();
+    }
+  });
+
+  // 浮动按钮
+  $('#floatAddBtn').addEventListener('click', function() {
+    $('#editSchoolId').value = '';
+    $('#sName').value = '';
+    $('#sEname').value = '';
+    $('#sCountry').value = '美国';
+    $('#sQs').value = '0';
+    $('#sType').value = '';
+    $('#sCity').value = '';
+    $('#sDegree').value = '';
+    $('#sMajor').value = '';
+    $('#sPrograms').value = '';
+    $('#sFee').value = '';
+    $('#sDeadline').value = '';
+    $('#sDesc').value = '';
+    $('#addTitle').textContent = '➕ 添加院校';
+    $('#addSchoolModal').classList.add('show');
+    $('#sName').focus();
+  });
+
+  // 关闭添加弹窗
+  $('#btnAddCancel').addEventListener('click', function() { $('#addSchoolModal').classList.remove('show'); });
+  $('#addSchoolModal').addEventListener('click', function(e) { if(e.target===this) this.classList.remove('show'); });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && $('#addSchoolModal').classList.contains('show')) $('#addSchoolModal').classList.remove('show');
+  });
+
+  // 保存学校
+  $('#btnAddSave').addEventListener('click', function() {
+    var name = $('#sName').value.trim();
+    if (!name) { toast('⚠️ 请输入院校名称'); return; }
+
+    var data = {
+      id: Date.now(),
+      name: name,
+      ename: $('#sEname').value.trim() || name,
+      country: $('#sCountry').value,
+      countryFlag: ({'美国':'🇺🇸','英国':'🇬🇧','澳大利亚':'🇦🇺','加拿大':'🇨🇦','新加坡':'🇸🇬','日本':'🇯🇵','德国':'🇩🇪','法国':'🇫🇷','韩国':'🇰🇷','中国香港':'🇭🇰','中国':'🇨🇳','瑞士':'🇨🇭'})[$('#sCountry').value] || '🌍',
+      qs: parseInt($('#sQs').value) || 0,
+      type: $('#sType').value.trim() || '其他',
+      city: $('#sCity').value.trim() || '',
+      degree: $('#sDegree').value.split(/[,，]/).filter(Boolean).map(s=>s.trim()),
+      major: $('#sMajor').value.split(/[,，]/).filter(Boolean).map(s=>s.trim()),
+      programs: $('#sPrograms').value.split(/[,，]/).filter(Boolean).map(s=>s.trim()),
+      fee: $('#sFee').value.trim() || '面议',
+      deadline: $('#sDeadline').value.trim() || '滚动招生',
+      desc: $('#sDesc').value.trim() || '',
+      color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')
+    };
+
+    var editId = $('#editSchoolId').value;
+    if (editId) {
+      var idx = customSchools.findIndex(function(s) { return s.id == editId; });
+      if (idx !== -1) {
+        customSchools[idx] = data; toast('✅ 已更新');
+      } else {
+        // 编辑的是内置学校，隐藏原版，添加编辑版
+        var hidden = getHiddenSchools();
+        if (hidden.indexOf(parseInt(editId)) === -1) hidden.push(parseInt(editId));
+        saveHiddenSchools(hidden);
+        data.id = Date.now(); // 新ID作为自建
+        customSchools.unshift(data);
+        toast('✅ 已保存为自建学校（原版已隐藏）');
+      }
+    } else {
+      customSchools.unshift(data);
+      toast('✅ 已添加');
+    }
+    saveCustomSchools();
+    $('#addSchoolModal').classList.remove('show');
+    renderSchools();
+  });
+
+  // 获取隐藏的内置学校ID列表
+  function getHiddenSchools() {
+    try { return JSON.parse(localStorage.getItem('school_hidden')) || []; }
+    catch(_) { return []; }
+  }
+  function saveHiddenSchools(ids) { localStorage.setItem('school_hidden', JSON.stringify(ids)); }
+
+  // 删除学校（管理员）
+  window.deleteSchool = function(id) {
+    if (!confirm('确定删除这所院校吗？\n自建学校将永久删除，内置学校将隐藏（可恢复）。')) return;
+    var isCustom = customSchools.some(function(s) { return s.id == id; });
+    if (isCustom) {
+      customSchools = customSchools.filter(function(s) { return s.id != id; });
+      saveCustomSchools();
+      toast('🗑 自建学校已永久删除');
+    } else {
+      var hidden = getHiddenSchools();
+      if (hidden.indexOf(id) === -1) hidden.push(id);
+      saveHiddenSchools(hidden);
+      toast('🙈 内置学校已隐藏（重新添加可恢复）');
+    }
+    renderSchools();
+  };
+
+  // 编辑学校（管理员）
+  window.editSchool = function(id) {
+    var allSchools = getAllSchools();
+    var s = allSchools.find(function(x) { return x.id == id; });
+    if (!s) return;
+    $('#editSchoolId').value = s.id;
+    $('#sName').value = s.name;
+    $('#sEname').value = s.ename;
+    $('#sCountry').value = s.country;
+    $('#sQs').value = s.qs;
+    $('#sType').value = s.type;
+    $('#sCity').value = s.city;
+    $('#sDegree').value = s.degree.join(',');
+    $('#sMajor').value = s.major.join(',');
+    $('#sPrograms').value = s.programs.join(',');
+    $('#sFee').value = s.fee;
+    $('#sDeadline').value = s.deadline;
+    $('#sDesc').value = s.desc;
+    $('#addTitle').textContent = '✏️ 编辑院校';
+    $('#addSchoolModal').classList.add('show');
+  };
+
+  // 修改渲染，使用合并数据
+  var renderSchoolsOrig = renderSchools;
+  renderSchools = function() {
+    // 重写以使用 getAllSchools
+    var keyword = ($('#searchInput').value || '').toLowerCase().trim();
+    var favs = getFavorites();
+    var allSchools = getAllSchools();
+
+    var filtered = allSchools.filter(function(s) {
+      if (showFavOnly && !favs.includes(s.id)) return false;
+      if (activeCountry !== '全部' && s.country !== activeCountry) return false;
+      if (activeDegree !== '全部' && !(s.degree||[]).includes(activeDegree)) return false;
+      if (activeMajor !== '全部' && !(s.major||[]).includes(activeMajor)) return false;
+      if (s.qs < activeRank.min || s.qs > activeRank.max) return false;
+      if (keyword) {
+        return s.name.includes(keyword) || (s.ename||'').toLowerCase().includes(keyword) ||
+               s.country.includes(keyword) || (s.programs||[]).some(function(p){return p.includes(keyword)}) ||
+               (s.major||[]).some(function(m){return m.includes(keyword)});
+      }
+      return true;
+    });
+
+    if (sortByRank) filtered.sort(function(a,b) { return (a.qs||9999) - (b.qs||9999); });
+
+    $('#resultCount').textContent = '共 ' + filtered.length + ' 所院校';
+
+    if (filtered.length === 0) {
+      $('#schoolGrid').innerHTML = '';
+      $('#emptyState').style.display = 'block';
+      return;
+    }
+    $('#emptyState').style.display = 'none';
+
+    $('#schoolGrid').innerHTML = filtered.map(function(s) {
+      var favs2 = getFavorites();
+      var isFav = favs2.includes(s.id);
+      var rankClass = s.qs <= 10 ? 'top10' : s.qs <= 50 ? 'top50' : '';
+      var isCustom = s.id > 100000;
+
+      return '<div class="school-card" onclick="openDetail(' + s.id + ')">'
+        + '<input type="checkbox" class="compare-check"' + (compareIds.indexOf(s.id)!==-1?' checked':'') + ' onclick="toggleCompareCheck(event,' + s.id + ')" />'
+        + (s.qs > 0 && s.qs <= 50 ? '<div class="rank-badge ' + rankClass + '"><span class="num">' + s.qs + '</span>QS</div>' : '')
+        + (isAdmin ? '<div class="admin-actions" onclick="event.stopPropagation()"><button style="border:none;background:#f0f4ff;color:var(--primary);padding:3px 8px;border-radius:10px;font-size:11px;cursor:pointer" onclick="event.stopPropagation();editSchool(' + s.id + ')">✏️</button><button style="border:none;background:#fef2f2;color:var(--red);padding:3px 8px;border-radius:10px;font-size:11px;cursor:pointer" onclick="event.stopPropagation();deleteSchool(' + s.id + ')">🗑</button></div>' : '')
+        + '<div class="school-logo" style="background:' + (s.color||'#999') + '">' + (s.name||'?')[0] + '</div>'
+        + '<div class="school-info">'
+        +   '<div class="school-name">' + s.name + (isCustom?' <span style="font-size:10px;color:var(--primary)">[自建]</span>':'') + '</div>'
+        +   '<div class="school-ename">' + (s.ename||'') + '</div>'
+        +   '<div class="school-meta">'
+        +     '<span class="meta-country">' + (s.countryFlag||'') + ' ' + s.country + '</span>'
+        +     '<span class="meta-type">' + (s.type||'') + '</span>'
+        +     '<span class="meta-fee">' + (s.fee||'').split('/')[0] + '</span>'
+        +   '</div>'
+        +   '<div class="school-programs">'
+        +     (s.programs||[]).slice(0,4).map(function(p,i){return '<span class="program-tag'+(i===0?' hot':'')+'">'+p+'</span>'}).join('')
+        +   '</div>'
+        +   '<div class="school-actions">'
+        +     '<button class="fav-btn'+(isFav?' faved':'')+'" onclick="toggleFav(event,'+s.id+')">'+(isFav?'❤️':'🤍')+'</button>'
+        +     '<span class="detail-link">查看详情 →</span>'
+        +   '</div>'
+        + '</div></div>';
+    }).join('');
+  };
+
+  // 修改详情弹窗以支持合并数据
+  window.openDetail = function(id) {
+    addHistory(id);
+    var allSchools = getAllSchools();
+    var s = allSchools.find(function(x) { return x.id === id; });
+    if (!s) return;
+    var favs = getFavorites();
+    var isFav = favs.includes(id);
+
+    $('#detailContent').innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px">'
+      + '<div class="school-logo" style="background:' + (s.color||'#999') + ';width:56px;height:56px;font-size:26px">' + (s.name||'?')[0] + '</div>'
+      + '<div>'
+      +   '<h2>' + s.name + (s.qs > 0 ? ' <span style="font-size:14px;color:var(--gold)">QS#' + s.qs + '</span>' : '') + '</h2>'
+      +   '<div class="en-name">' + (s.ename||'') + '</div>'
+      + '</div></div>'
+
+      + '<div class="detail-section"><h4>📋 基本信息</h4>'
+      + '<div class="detail-grid">'
+      + '<div class="detail-item"><div class="label">国家</div><div class="value">' + (s.countryFlag||'') + ' ' + s.country + '</div></div>'
+      + '<div class="detail-item"><div class="label">学校类型</div><div class="value">' + (s.type||'') + '</div></div>'
+      + '<div class="detail-item"><div class="label">所在城市</div><div class="value">' + (s.city||'') + '</div></div>'
+      + '<div class="detail-item"><div class="label">QS排名</div><div class="value">' + (s.qs > 0 ? '第 ' + s.qs + ' 名' : '未上榜') + '</div></div>'
+      + '<div class="detail-item"><div class="label">学费</div><div class="value">' + (s.fee||'面议') + '</div></div>'
+      + '<div class="detail-item"><div class="label">申请截止</div><div class="value">' + (s.deadline||'滚动招生') + '</div></div>'
+      + '</div></div>'
+
+      + '<div class="detail-section"><h4>📖 学校简介</h4><p style="font-size:14px;color:var(--text2);line-height:1.8">' + (s.desc||'暂无简介') + '</p></div>'
+
+      + '<div class="detail-section"><h4>🎯 热门课程</h4><div class="program-list">'
+      + (s.programs||[]).map(function(p){return '<span class="program-pill">'+p+'</span>'}).join('')
+      + '</div></div>'
+
+      + '<div class="detail-section"><h4>📚 专业方向</h4><div class="program-list">'
+      + (s.major||[]).map(function(m){return '<span class="program-pill" style="background:#fef3e8;color:#e8882e">'+m+'</span>'}).join('')
+      + '</div></div>'
+
+      + '<div style="display:flex;gap:10px;margin-top:20px">'
+      + '<button class="filter-chip active" style="flex:1;padding:12px;font-size:14px;cursor:pointer" onclick="toggleFavFromDetail(' + id + ')">'
+      + (isFav ? '❤️ 取消收藏' : '🤍 加入收藏')
+      + '</button>'
+      + '<button class="filter-chip" style="flex:1;padding:12px;font-size:14px;cursor:pointer" onclick="document.getElementById(\'detailModal\').classList.remove(\'show\')">关闭</button>'
+      + '</div>';
+
+    $('#detailModal').classList.add('show');
+  };
+
+  // ===================== 启动 =====================
+  loadCustomSchools();
+  loadHistory();
+  renderFilters();
+  updateFavBar();
+  renderSchools();
+  renderHistory();
+  updateCompareUI();
+  console.log('🎓 择校助手已就绪');
+  console.log('  - 管理员密码：' + DEFAULT_ADMIN_PWD);
+})();
+</script>
+</body>
+</html>
