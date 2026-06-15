@@ -618,6 +618,7 @@ body {
           <button class="btn btn-outline btn-sm" id="btnImport">📥 导入</button>
           <input type="file" id="importFile" accept=".json" style="display:none" />
           <button class="btn btn-outline btn-sm" id="btnChangePwd">🔑 改密码</button>
+          <button class="btn btn-primary btn-sm" id="btnQuickAdd">📋 快速粘贴</button>
           <button class="btn btn-primary btn-sm" id="btnAdd">＋ 添加</button>
         </div>
       </div>
@@ -778,6 +779,22 @@ body {
   </div>
 </div>
 
+<!-- ==================== 快速粘贴弹窗 ==================== -->
+<div class="modal-overlay" id="quickModalOverlay">
+  <div class="modal" id="quickModal">
+    <h3>📋 快速粘贴招聘信息</h3>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:14px">直接把招聘文字粘贴到下面，系统自动解析并添加</p>
+    <div class="form-group">
+      <label>粘贴招聘内容 *</label>
+      <textarea id="qRaw" rows="14" placeholder="把招聘信息全文粘贴到这里…&#10;例如：浙江泛洋继续面试…" maxlength="3000" style="font-size:14px;line-height:1.6"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="btnQuickCancel">取消</button>
+      <button class="btn btn-primary" id="btnQuickSave">🔍 解析并保存</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {
   'use strict';
@@ -826,6 +843,10 @@ body {
   const $fContact    = $('#fContact');
   const $fActive     = $('#fActive');
   const $toast       = $('#toast');
+
+  // 快速粘贴
+  const $quickModalOverlay = $('#quickModalOverlay');
+  const $qRaw        = $('#qRaw');
 
   // 求职报名表单
   const $applyModalOverlay = $('#applyModalOverlay');
@@ -1272,6 +1293,142 @@ body {
     var ac = document.getElementById('applyCount');
     if (ac) ac.textContent = applications.length;
   }
+
+  // ===================== 快速粘贴 =====================
+  $('#btnQuickAdd').addEventListener('click', function() {
+    if (!isLoggedIn) { toast('⚠️ 请先登录'); return; }
+    $qRaw.value = '';
+    $quickModalOverlay.classList.add('show');
+    setTimeout(function() { $qRaw.focus(); }, 100);
+  });
+
+  $('#btnQuickCancel').addEventListener('click', function() {
+    $quickModalOverlay.classList.remove('show');
+  });
+  $quickModalOverlay.addEventListener('click', function(e) {
+    if (e.target === $quickModalOverlay) $quickModalOverlay.classList.remove('show');
+  });
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && $quickModalOverlay.classList.contains('show')) {
+      $quickModalOverlay.classList.remove('show');
+    }
+  });
+
+  // 智能解析招聘文字
+  function parseRecruitmentText(raw) {
+    var lines = raw.split(/[\n\r]+/).filter(function(l) { return l.trim(); });
+    if (lines.length === 0) return null;
+
+    var fullText = raw.replace(/\n/g, ' ').replace(/\s+/g, ' ');
+
+    // 尝试提取公司名：第一行或包含"公司/集团/厂/有限"的行
+    var company = '';
+    for (var i = 0; i < Math.min(lines.length, 5); i++) {
+      var l = lines[i].trim();
+      if (l.length <= 20 && (l.includes('公司') || l.includes('集团') || l.includes('厂') || l.includes('有限'))) {
+        company = l.replace(/[:：].*/, '').trim();
+        break;
+      }
+    }
+    if (!company && lines.length > 0) {
+      var first = lines[0].trim();
+      if (first.length <= 25) company = first.replace(/[:：].*/, '').trim();
+    }
+
+    // 提取岗位名：含"工/员/师/管/理"的行
+    var title = '';
+    for (var i = 0; i < Math.min(lines.length, 8); i++) {
+      var l = lines[i].trim();
+      if (l.length <= 40 && /[工员师管]/.test(l) && !l.includes('公司') && !l.includes('要求') && !l.includes('联系')) {
+        title = l.replace(/[:：].*/, '').replace(/现需求|招聘|岗位[:：]?/g, '').trim();
+        if (title.length >= 2) break;
+      }
+    }
+    if (!title) title = lines[0].trim().substring(0, 40);
+
+    // 提取薪资
+    var salary = '';
+    var salaryMatch = fullText.match(/(\d{4,5}\s*[-~至到]\s*\d{4,5})\s*(?:元|块)?(?:\/|\/)?(?:月|每月)?/);
+    if (salaryMatch) {
+      salary = salaryMatch[0].replace(/\s+/g, '');
+      if (!salary.includes('元')) salary += '元/月';
+    }
+
+    // 提取工作类型
+    var jobType = '全职';
+    if (/兼职/.test(fullText)) jobType = '兼职';
+    if (/实习/.test(fullText)) jobType = '实习';
+
+    // 提取地点
+    var location = '';
+    var locMatch = fullText.match(/(?:浙江|江苏|上海|北京|广东|深圳|杭州|宁波|温州|绍兴|台州|金华|湖州|嘉兴|衢州|丽水|舟山|盐城|苏州|南京|无锡|常州)[一-龥·\-\w]*/);
+    if (locMatch) location = locMatch[0];
+
+    // 提取电话
+    var contact = '';
+    var phoneMatch = fullText.match(/1[3-9]\d{9}/);
+    if (phoneMatch) {
+      contact = phoneMatch[0];
+      var nameMatch = fullText.match(/([朱陈张李王郭柏黄杨刘赵吴周徐孙马胡林郑何高罗梁宋谢唐韩冯于董程袁邓许傅沈曾彭吕苏蒋蔡贾丁魏薛叶阎余潘戴夏钟汪田任姜范方石姚谭廖邹熊金陆郝孔白崔康毛邱秦江史顾侯邵孟龙万段雷钱汤尹黎易常武乔贺赖龚文]/);
+      if (nameMatch) contact = nameMatch[0] + '先生/女士 ' + contact;
+      var wxMatch = fullText.match(/(?:微信|WeChat|vx?)[：:]*\s*(\w+)/i);
+      if (wxMatch) contact += '（微信：' + wxMatch[1] + '）';
+    }
+
+    // 提取福利标签
+    var tags = [];
+    var tagKeywords = ['五险一金', '五险', '包吃包住', '包吃住', '包住', '三餐免费', '免费工作餐', '空调', '宿舍', '独立卫生间', '不查纹身', '可预支', '返费', '绩效', '年终奖', '餐补', '节日福利', '高温补贴', '夜班补贴', '自助餐', '免费住宿', '做六休一', '坐班', '恒温车间'];
+    tagKeywords.forEach(function(t) {
+      if (fullText.includes(t)) tags.push(t);
+    });
+
+    // 组装结果
+    var desc = raw.trim();
+    if (desc.length > 500) desc = desc.substring(0, 497) + '...';
+    var req = '';
+    var reqMatch = raw.match(/要求[：:]\s*([\s\S]+?)(?=面试|注意|电话|联系|优势|福利|薪酬|$)/);
+    if (reqMatch) req = reqMatch[1].trim();
+    if (req.length > 500) req = req.substring(0, 497) + '...';
+
+    return {
+      title: title,
+      company: company || '待填写',
+      location: location,
+      salary: salary,
+      type: jobType,
+      desc: desc,
+      req: req,
+      tags: tags.join(','),
+      contact: contact
+    };
+  }
+
+  $('#btnQuickSave').addEventListener('click', function() {
+    var raw = $qRaw.value.trim();
+    if (!raw) { toast('⚠️ 请粘贴招聘内容'); $qRaw.focus(); return; }
+
+    var parsed = parseRecruitmentText(raw);
+    if (!parsed) { toast('⚠️ 无法解析内容，请检查格式'); return; }
+
+    // 预填到编辑弹窗
+    $modalTitle.textContent = '📋 确认并保存';
+    $editId.value = '';
+    $fTitle.value = parsed.title;
+    $fCompany.value = parsed.company;
+    $fLocation.value = parsed.location;
+    $fSalary.value = parsed.salary;
+    $fType.value = parsed.type;
+    $fDesc.value = parsed.desc;
+    $fReq.value = parsed.req;
+    $fTags.value = parsed.tags;
+    $fContact.value = parsed.contact;
+    $fActive.checked = true;
+
+    // 关闭快速粘贴弹窗，打开编辑弹窗确认
+    $quickModalOverlay.classList.remove('show');
+    $modalOverlay.classList.add('show');
+    toast('🔍 已自动解析，请确认后保存');
+  });
 
   // ===================== 弹窗 =====================
   function openAddModal() {
